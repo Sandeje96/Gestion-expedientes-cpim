@@ -8,6 +8,29 @@ class DataManager:
         self.excel_file = Path("registros.xlsx")
         print(f"Usando archivo Excel: {self.excel_file.absolute()}")
         self._ensure_excel_exists()
+
+    def clean_data(self, data):
+        """
+        Limpia los datos eliminando espacios en blanco innecesarios
+        
+        Args:
+            data: Diccionario con los datos a limpiar
+        
+        Returns:
+            dict: Diccionario con datos limpios
+        """
+        cleaned_data = {}
+        
+        for key, value in data.items():
+            if isinstance(value, str):
+                # Limpiar espacios al inicio y final
+                cleaned_value = value.strip()
+                cleaned_data[key] = cleaned_value
+            else:
+                # Si no es string, mantener el valor original
+                cleaned_data[key] = value
+        
+        return cleaned_data
     
     def _ensure_excel_exists(self):
         """Asegura que el archivo Excel existe con las hojas necesarias"""

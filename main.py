@@ -19,17 +19,24 @@ from config import ensure_directories
 
 def main():
     """Función principal del programa"""
-    # Configurar tema de la aplicación
-    ctk.set_appearance_mode("System")
-    # Modos: "System" (default), "Dark", "Light"
-    ctk.set_default_color_theme("blue")  # Temas: "blue" (default), "dark-blue", "green"
-    
-    # Asegurar que las carpetas necesarias existen
-    ensure_directories()
-    
-    # Iniciar la aplicación
-    app = App()
-    app.mainloop()
+    try:
+        # Configurar tema de la aplicación
+        ctk.set_appearance_mode("System")
+        # Modos: "System" (default), "Dark", "Light"
+        ctk.set_default_color_theme("blue")  # Temas: "blue" (default), "dark-blue", "green"
+        
+        # Asegurar que las carpetas necesarias existen
+        ensure_directories()
+        
+        # Iniciar la aplicación
+        app = App()
+        app.mainloop()
+        
+    except Exception as e:
+        print(f"Error al iniciar la aplicación: {e}")
+        import traceback
+        traceback.print_exc()
+        input("Presiona Enter para salir...")
 
 if __name__ == "__main__":
     main()
