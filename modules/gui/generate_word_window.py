@@ -3,6 +3,8 @@ import customtkinter as ctk
 from tkinter import messagebox
 from datetime import datetime
 from pathlib import Path
+import subprocess
+import os
 from .autocomplete_widget import AutocompleteEntry
 
 
@@ -266,3 +268,99 @@ class GenerateWordWindow:
         self.word_informe_search_option_var = ctk.StringVar(value=search_options[0])
         option_menu = ctk.CTkOptionMenu(search_frame, values=search_options, variable=self.word_informe_search_option_var)
         option_menu.grid(row=0, column=1, padx=5, pady=5)
+        
+        # TODO: Completar la configuración de la pestaña de informes
+        # Por ahora, mostrar un mensaje temporal
+        temp_label = ctk.CTkLabel(parent, text="Funcionalidad de informes en desarrollo", 
+                                 font=ctk.CTkFont(size=16, weight="bold"))
+        temp_label.pack(pady=50)
+    
+    def generate_obra_sellado(self, obra_id):
+        """Genera el documento Word de proforma de tasa de sellado"""
+        try:
+            # Obtener los datos de la obra
+            obra = self.data_manager.get_work_by_id("obra", obra_id)
+            
+            if not obra:
+                messagebox.showerror("Error", "No se pudo obtener la información de la obra")
+                return
+            
+            # Determinar la carpeta de destino correcta
+            if obra.get("ruta_carpeta"):
+                # Si tiene ruta de carpeta, usar esa
+                output_dir = Path(obra["ruta_carpeta"])
+            else:
+                # Si no tiene ruta (trabajos físicos), crear la estructura de carpetas
+                output_dir = self.file_manager.create_folder_structure(obra, "obra")
+            
+            # Crear el nombre del archivo
+            filename = f"Proforma_Sellado_{obra['nombre_comitente']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+            output_path = output_dir / filename
+            
+            # Generar el documento
+            result = self.word_generator.generate_obra_sellado(obra, output_path)
+            
+            if result.startswith("Error") or result.startswith("Faltan"):
+                messagebox.showerror("Error", result)
+            else:
+                messagebox.showinfo("Éxito", f"Documento generado correctamente:\n{filename}")
+                
+                # Abrir el archivo Word generado
+                import subprocess
+                import os
+                
+                if os.name == 'nt':  # Windows
+                    os.startfile(str(output_path))
+                elif os.name == 'posix':  # macOS y Linux
+                    if 'darwin' in os.sys.platform:
+                        subprocess.call(['open', str(output_path)])
+                    else:
+                        subprocess.call(['xdg-open', str(output_path)])
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al generar documento: {str(e)}")
+    
+    def generate_obra_visado(self, obra_id):
+        """Genera el documento Word de proforma de tasa de visado"""
+        try:
+            # Obtener los datos de la obra
+            obra = self.data_manager.get_work_by_id("obra", obra_id)
+            
+            if not obra:
+                messagebox.showerror("Error", "No se pudo obtener la información de la obra")
+                return
+            
+            # Determinar la carpeta de destino correcta
+            if obra.get("ruta_carpeta"):
+                # Si tiene ruta de carpeta, usar esa
+                output_dir = Path(obra["ruta_carpeta"])
+            else:
+                # Si no tiene ruta (trabajos físicos), crear la estructura de carpetas
+                output_dir = self.file_manager.create_folder_structure(obra, "obra")
+            
+            # Crear el nombre del archivo
+            filename = f"Proforma_Visado_{obra['nombre_comitente']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+            output_path = output_dir / filename
+            
+            # Generar el documento
+            result = self.word_generator.generate_obra_visado(obra, output_path)
+            
+            if result.startswith("Error") or result.startswith("Faltan"):
+                messagebox.showerror("Error", result)
+            else:
+                messagebox.showinfo("Éxito", f"Documento generado correctamente:\n{filename}")
+                
+                # Abrir el archivo Word generado
+                import subprocess
+                import os
+                
+                if os.name == 'nt':  # Windows
+                    os.startfile(str(output_path))
+                elif os.name == 'posix':  # macOS y Linux
+                    if 'darwin' in os.sys.platform:
+                        subprocess.call(['open', str(output_path)])
+                    else:
+                        subprocess.call(['xdg-open', str(output_path)])
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al generar documento: {str(e)}")
