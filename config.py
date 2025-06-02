@@ -66,3 +66,4 @@ def ensure_directories():
 TIPOS_OBRA = ["Obra nueva", "Registración"]
 PROFESIONES = ["Ingeniero", "Licenciado", "MMO", "Técnico"]
 FORMATOS = ["Físico", "Digital"]
+WHATSAPP_WEB_URL = "https://web.whatsapp.com/send"

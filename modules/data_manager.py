@@ -56,12 +56,22 @@ class DataManager:
                             "Visado de instalacion electrica", "Visado de instalacion electromecanica",
                             "Estado pago sellado", "Estado pago visado",
                             "Nro de expediente CPIM", "Fecha de salida", "Persona que retira", 
-                            "Nro de Caja", "Ruta de carpeta"
+                            "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
                         ]
                         for idx, header in enumerate(headers_obras, 1):
                             cell = obras_sheet.cell(row=1, column=idx, value=header)
                             cell.font = Font(bold=True)
                         necesita_guardar = True
+                    else:
+                        # Verificar si ya tiene las columnas de WhatsApp
+                        obras_sheet = workbook["Obras en general"]
+                        if obras_sheet.max_column < 26:  # Si no tiene todas las columnas
+                            # Agregar columnas de WhatsApp
+                            obras_sheet.cell(row=1, column=25, value="WhatsApp Profesional")
+                            obras_sheet.cell(row=1, column=26, value="WhatsApp Tramitador")
+                            obras_sheet.cell(row=1, column=25).font = Font(bold=True)
+                            obras_sheet.cell(row=1, column=26).font = Font(bold=True)
+                            necesita_guardar = True
                     
                     if "Informes técnicos" not in workbook.sheetnames:
                         print("Creando hoja 'Informes técnicos'")
@@ -70,17 +80,27 @@ class DataManager:
                             "Fecha", "Profesión", "Formato", "Nro de Copias", "Tipo de trabajo", 
                             "Detalle", "Profesional", "Comitente", "Tasa de sellado", 
                             "Estado de pago", "Nro de expediente CPIM", "Fecha de salida", 
-                            "Persona que retira", "Nro de Caja", "Ruta de carpeta"
+                            "Persona que retira", "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
                         ]
                         for idx, header in enumerate(headers_informes, 1):
                             cell = informes_sheet.cell(row=1, column=idx, value=header)
                             cell.font = Font(bold=True)
                         necesita_guardar = True
+                    else:
+                        # Verificar si ya tiene las columnas de WhatsApp
+                        informes_sheet = workbook["Informes técnicos"]
+                        if informes_sheet.max_column < 17:  # Si no tiene todas las columnas
+                            # Agregar columnas de WhatsApp
+                            informes_sheet.cell(row=1, column=16, value="WhatsApp Profesional")
+                            informes_sheet.cell(row=1, column=17, value="WhatsApp Tramitador")
+                            informes_sheet.cell(row=1, column=16).font = Font(bold=True)
+                            informes_sheet.cell(row=1, column=17).font = Font(bold=True)
+                            necesita_guardar = True
                     
                     # Guardar si se hicieron cambios
                     if necesita_guardar:
                         workbook.save(str(self.excel_file))
-                        print("Archivo Excel actualizado con las hojas necesarias")
+                        print("Archivo Excel actualizado con las hojas necesarias y campos de WhatsApp")
                     else:
                         print("Archivo Excel existente cargado correctamente")
                     
@@ -110,7 +130,7 @@ class DataManager:
                 "Visado de instalacion electrica", "Visado de instalacion electromecanica",
                 "Estado pago sellado", "Estado pago visado",
                 "Nro de expediente CPIM", "Fecha de salida", "Persona que retira", 
-                "Nro de Caja", "Ruta de carpeta"
+                "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
             ]
             
             # Configurar encabezados para Informes técnicos
@@ -118,7 +138,7 @@ class DataManager:
                 "Fecha", "Profesión", "Formato", "Nro de Copias", "Tipo de trabajo", 
                 "Detalle", "Profesional", "Comitente", "Tasa de sellado", 
                 "Estado de pago", "Nro de expediente CPIM", "Fecha de salida", 
-                "Persona que retira", "Nro de Caja", "Ruta de carpeta"
+                "Persona que retira", "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
             ]
             
             # Aplicar encabezados a Obras en general
@@ -227,7 +247,7 @@ class DataManager:
                     "Visado de instalacion electrica", "Visado de instalacion electromecanica",
                     "Estado pago sellado", "Estado pago visado",
                     "Nro de expediente CPIM", "Fecha de salida", "Persona que retira", 
-                    "Nro de Caja", "Ruta de carpeta"
+                    "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
                 ]
                 for idx, header in enumerate(headers, 1):
                     cell = sheet.cell(row=1, column=idx, value=header)
@@ -263,7 +283,9 @@ class DataManager:
                 21: data.get("fecha_salida", ""),
                 22: data.get("persona_retira", ""),
                 23: data.get("nro_caja", ""),
-                24: data.get("ruta_carpeta", "")
+                24: data.get("ruta_carpeta", ""),
+                25: data.get("whatsapp_profesional", ""),
+                26: data.get("whatsapp_tramitador", "")
             }
             
             # Insertar datos en la hoja
@@ -291,7 +313,7 @@ class DataManager:
                     "Fecha", "Profesión", "Formato", "Nro de Copias", "Tipo de trabajo", 
                     "Detalle", "Profesional", "Comitente", "Tasa de sellado", 
                     "Estado de pago", "Nro de expediente CPIM", "Fecha de salida", 
-                    "Persona que retira", "Nro de Caja", "Ruta de carpeta"
+                    "Persona que retira", "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
                 ]
                 for idx, header in enumerate(headers, 1):
                     cell = sheet.cell(row=1, column=idx, value=header)
@@ -318,7 +340,9 @@ class DataManager:
                 12: data.get("fecha_salida", ""),
                 13: data.get("persona_retira", ""),
                 14: data.get("nro_caja", ""),
-                15: data.get("ruta_carpeta", "")
+                15: data.get("ruta_carpeta", ""),
+                16: data.get("whatsapp_profesional", ""),
+                17: data.get("whatsapp_tramitador", "")
             }
             
             # Insertar datos en la hoja
@@ -356,14 +380,14 @@ class DataManager:
                         "Visado de instalacion electrica", "Visado de instalacion electromecanica",
                         "Estado pago sellado", "Estado pago visado",
                         "Nro de expediente CPIM", "Fecha de salida", "Persona que retira", 
-                        "Nro de Caja", "Ruta de carpeta"
+                        "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
                     ]
                 else:
                     headers = [
                         "Fecha", "Profesión", "Formato", "Nro de Copias", "Tipo de trabajo", 
                         "Detalle", "Profesional", "Comitente", "Tasa de sellado", 
                         "Estado de pago", "Nro de expediente CPIM", "Fecha de salida", 
-                        "Persona que retira", "Nro de Caja", "Ruta de carpeta"
+                        "Persona que retira", "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
                     ]
                 
                 for idx, header in enumerate(headers, 1):
@@ -459,7 +483,9 @@ class DataManager:
                     "fecha_salida": sheet.cell(row=row, column=21).value,
                     "persona_retira": sheet.cell(row=row, column=22).value,
                     "nro_caja": sheet.cell(row=row, column=23).value,
-                    "ruta_carpeta": sheet.cell(row=row, column=24).value
+                    "ruta_carpeta": sheet.cell(row=row, column=24).value,
+                    "whatsapp_profesional": sheet.cell(row=row, column=25).value,
+                    "whatsapp_tramitador": sheet.cell(row=row, column=26).value
                 }
             else:
                 work = {
@@ -478,7 +504,9 @@ class DataManager:
                     "fecha_salida": sheet.cell(row=row, column=12).value,
                     "persona_retira": sheet.cell(row=row, column=13).value,
                     "nro_caja": sheet.cell(row=row, column=14).value,
-                    "ruta_carpeta": sheet.cell(row=row, column=15).value
+                    "ruta_carpeta": sheet.cell(row=row, column=15).value,
+                    "whatsapp_profesional": sheet.cell(row=row, column=16).value,
+                    "whatsapp_tramitador": sheet.cell(row=row, column=17).value
                 }
             
             return work
@@ -537,6 +565,10 @@ class DataManager:
                     sheet.cell(row=row, column=22, value=value)
                 elif key == "nro_caja":
                     sheet.cell(row=row, column=23, value=value)
+                elif key == "whatsapp_profesional":
+                    sheet.cell(row=row, column=25, value=value)
+                elif key == "whatsapp_tramitador":
+                    sheet.cell(row=row, column=26, value=value)
             
             # Guardar el archivo con los cambios
             workbook.save(str(self.excel_file))
@@ -658,6 +690,10 @@ class DataManager:
                     sheet.cell(row=row, column=22, value=value)
                 elif key == "nro_caja":
                     sheet.cell(row=row, column=23, value=value)
+                elif key == "whatsapp_profesional":
+                    sheet.cell(row=row, column=25, value=value)
+                elif key == "whatsapp_tramitador":
+                    sheet.cell(row=row, column=26, value=value)
             
             workbook.save(str(self.excel_file))
             print(f"Trabajo similar actualizado en fila {row}")
@@ -698,6 +734,10 @@ class DataManager:
                     sheet.cell(row=row, column=13, value=value)
                 elif key == "nro_caja":
                     sheet.cell(row=row, column=14, value=value)
+                elif key == "whatsapp_profesional":
+                    sheet.cell(row=row, column=16, value=value)
+                elif key == "whatsapp_tramitador":
+                    sheet.cell(row=row, column=17, value=value)
             
             workbook.save(str(self.excel_file))
             print(f"Informe actualizado en fila {row}")

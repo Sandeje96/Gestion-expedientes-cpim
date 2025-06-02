@@ -80,7 +80,9 @@ class NewRecordWindow:
             "visado_gas": ctk.StringVar(),
             "visado_salubridad": ctk.StringVar(),
             "visado_electrica": ctk.StringVar(),
-            "visado_electromecanica": ctk.StringVar()
+            "visado_electromecanica": ctk.StringVar(),
+            "whatsapp_profesional": ctk.StringVar(),
+            "whatsapp_tramitador": ctk.StringVar()
         }
         
         # Crear entradas de datos
@@ -197,6 +199,22 @@ class NewRecordWindow:
             ctk.CTkEntry(scroll_frame, textvariable=self.obra_vars[var_name]).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
             row += 1
         
+        # Añadir separador para WhatsApp
+        ctk.CTkLabel(scroll_frame, text="Datos de Contacto", font=("Arial", 12, "bold")).grid(row=row, column=0, columnspan=2, sticky="w", pady=(15, 5), padx=5)
+        row += 1
+        
+        # WhatsApp del profesional
+        ctk.CTkLabel(scroll_frame, text="WhatsApp Profesional:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+        whatsapp_prof_entry = ctk.CTkEntry(scroll_frame, textvariable=self.obra_vars["whatsapp_profesional"], placeholder_text="Ej: +5493755123456 o 3755123456")
+        whatsapp_prof_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+        row += 1
+        
+        # WhatsApp del tramitador
+        ctk.CTkLabel(scroll_frame, text="WhatsApp Tramitador (opcional):").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+        whatsapp_tram_entry = ctk.CTkEntry(scroll_frame, textvariable=self.obra_vars["whatsapp_tramitador"], placeholder_text="Ej: +5493755123456 o 3755123456")
+        whatsapp_tram_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+        row += 1
+        
         # Configurar el grid para que sea responsive
         scroll_frame.grid_columnconfigure(1, weight=1)
         
@@ -261,7 +279,9 @@ class NewRecordWindow:
             "detalle": ctk.StringVar(),
             "profesional": None,  # Se usará AutocompleteEntry directamente
             "comitente": None,    # Se usará AutocompleteEntry directamente
-            "tasa_sellado": ctk.StringVar()
+            "tasa_sellado": ctk.StringVar(),
+            "whatsapp_profesional": ctk.StringVar(),
+            "whatsapp_tramitador": ctk.StringVar()
         }
         
         # Crear entradas de datos
@@ -337,6 +357,22 @@ class NewRecordWindow:
         # Tasa de sellado
         ctk.CTkLabel(scroll_frame, text="Tasa de Sellado:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
         ctk.CTkEntry(scroll_frame, textvariable=self.informe_vars["tasa_sellado"]).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+        row += 1
+        
+        # Añadir separador para WhatsApp
+        ctk.CTkLabel(scroll_frame, text="Datos de Contacto", font=("Arial", 12, "bold")).grid(row=row, column=0, columnspan=2, sticky="w", pady=(15, 5), padx=5)
+        row += 1
+        
+        # WhatsApp del profesional
+        ctk.CTkLabel(scroll_frame, text="WhatsApp Profesional:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+        whatsapp_prof_entry = ctk.CTkEntry(scroll_frame, textvariable=self.informe_vars["whatsapp_profesional"], placeholder_text="Ej: +5493755123456 o 3755123456")
+        whatsapp_prof_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+        row += 1
+        
+        # WhatsApp del tramitador
+        ctk.CTkLabel(scroll_frame, text="WhatsApp Tramitador (opcional):").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+        whatsapp_tram_entry = ctk.CTkEntry(scroll_frame, textvariable=self.informe_vars["whatsapp_tramitador"], placeholder_text="Ej: +5493755123456 o 3755123456")
+        whatsapp_tram_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         row += 1
         
         # Configurar el grid para que sea responsive
@@ -415,39 +451,6 @@ class NewRecordWindow:
     
     def add_files_to_list(self):
         """Añade archivos a la lista de archivos seleccionados"""
-        filetypes = [
-            ("Documentos", "*.pdf;*.doc;*.docx"),
-            ("Archivos PDF", "*.pdf"),
-            ("Documentos Word", "*.doc;*.docx"),
-            ("Todos los archivos", "*.*")
-        ]
-        
-        # Abrir diálogo para seleccionar archivos
-        files = filedialog.askopenfilenames(
-            title="Seleccionar archivos",
-            filetypes=filetypes
-        )
-        
-        if files:
-            # Añadir archivos a la lista
-            for file in files:
-                if file not in self.selected_files:
-                    self.selected_files.append(file)
-                    # Mostrar solo el nombre del archivo en la lista
-                    self.files_listbox.insert(tk.END, os.path.basename(file))
-
-    def remove_selected_file(self):
-        """Elimina el archivo seleccionado de la lista"""
-        selected_indices = self.files_listbox.curselection()
-        
-        if selected_indices:
-            # Eliminar archivo seleccionado (de mayor a menor índice para evitar problemas)
-            for index in sorted(selected_indices, reverse=True):
-                del self.selected_files[index]
-                self.files_listbox.delete(index)
-    
-    def add_files_to_informe_list(self):
-        """Añade archivos a la lista de archivos seleccionados para informes"""
         filetypes = [
             ("Documentos", "*.pdf;*.doc;*.docx"),
             ("Archivos PDF", "*.pdf"),
@@ -664,6 +667,10 @@ class NewRecordWindow:
             self.obra_vars["visado_electrica"].set(obra_data["visado_electrica"])
             self.obra_vars["visado_electromecanica"].set(obra_data["visado_electromecanica"])
             
+            # Campos de WhatsApp (si existen en los datos)
+            self.obra_vars["whatsapp_profesional"].set(obra_data.get("whatsapp_profesional", ""))
+            self.obra_vars["whatsapp_tramitador"].set(obra_data.get("whatsapp_tramitador", ""))
+            
             # Limpiar específicamente los datos del profesional
             self.obra_vars["profesion"].set("")
             self.obra_vars["nombre_profesional"].set("")
@@ -673,3 +680,37 @@ class NewRecordWindow:
             
         except Exception as e:
             messagebox.showerror("Error", f"No se pudieron copiar todos los datos: {str(e)}")
+        
+        # Abrir diálogo para seleccionar archivos
+        files = filedialog.askopenfilenames(
+            title="Seleccionar archivos",
+            filetypes=filetypes
+        )
+        
+        if files:
+            # Añadir archivos a la lista
+            for file in files:
+                if file not in self.selected_files:
+                    self.selected_files.append(file)
+                    # Mostrar solo el nombre del archivo en la lista
+                    self.files_listbox.insert(tk.END, os.path.basename(file))
+
+    def remove_selected_file(self):
+        """Elimina el archivo seleccionado de la lista"""
+        selected_indices = self.files_listbox.curselection()
+        
+        if selected_indices:
+            # Eliminar archivo seleccionado (de mayor a menor índice para evitar problemas)
+            for index in sorted(selected_indices, reverse=True):
+                del self.selected_files[index]
+                self.files_listbox.delete(index)
+    
+    def add_files_to_informe_list(self):
+        """Añade archivos a la lista de archivos seleccionados para informes"""
+        filetypes = [
+            ("Documentos", "*.pdf;*.doc;*.docx"),
+            ("Archivos PDF", "*.pdf"),
+            ("Documentos Word", "*.doc;*.docx"),
+            ("Todos los archivos", "*.*")
+        ]
+        

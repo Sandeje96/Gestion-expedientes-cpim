@@ -3,6 +3,7 @@ import customtkinter as ctk
 from modules.data_manager import DataManager
 from modules.file_manager import FileManager
 from modules.word_generator import WordGenerator
+from modules.whatsapp_sender import WhatsAppSender
 from config import TRABAJOS_PATH, ensure_directories
 from .new_record_window import NewRecordWindow
 from .edit_work_window import EditWorkWindow
@@ -23,6 +24,7 @@ class App(ctk.CTk):
         self.data_manager = DataManager()
         self.file_manager = FileManager()
         self.word_generator = WordGenerator()
+        self.whatsapp_sender = WhatsAppSender()
 
         # Asegurarse de que las carpetas existan
         ensure_directories()
@@ -50,6 +52,15 @@ class App(ctk.CTk):
         )
         title.pack(pady=20)
         
+        # Subtítulo con funcionalidad de WhatsApp
+        subtitle = ctk.CTkLabel(
+            main_frame, 
+            text="📱 Con notificaciones automáticas por WhatsApp", 
+            font=ctk.CTkFont(size=14),
+            text_color="gray"
+        )
+        subtitle.pack(pady=(0, 20))
+        
         # Frame para los botones
         btn_frame = ctk.CTkFrame(main_frame)
         btn_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
@@ -64,7 +75,7 @@ class App(ctk.CTk):
         # Botón para nuevo registro
         btn_new = ctk.CTkButton(
             btn_frame, 
-            text="Nuevo Registro", 
+            text="📝 Nuevo Registro\n(con datos de WhatsApp)", 
             font=ctk.CTkFont(size=16),
             height=80,
             command=self.show_new_record_window
@@ -74,7 +85,7 @@ class App(ctk.CTk):
         # Botón para editar trabajo
         btn_edit = ctk.CTkButton(
             btn_frame, 
-            text="Editar Trabajo", 
+            text="✏️ Editar Trabajo\n(envío automático de WhatsApp)", 
             font=ctk.CTkFont(size=16),
             height=80,
             command=self.show_edit_work_window
@@ -84,7 +95,7 @@ class App(ctk.CTk):
         # Botón para duplicar trabajo
         btn_duplicate = ctk.CTkButton(
             btn_frame, 
-            text="Repetir Trabajo\ncon Otro Profesional", 
+            text="🔄 Repetir Trabajo\ncon Otro Profesional", 
             font=ctk.CTkFont(size=16),
             height=80,
             command=self.show_duplicate_work_window
@@ -94,7 +105,7 @@ class App(ctk.CTk):
         # Botón para generar documento Word
         btn_word = ctk.CTkButton(
             btn_frame, 
-            text="Generar Documento Word", 
+            text="📄 Generar Documento Word", 
             font=ctk.CTkFont(size=16),
             height=80,
             command=self.show_generate_word_window
@@ -104,12 +115,34 @@ class App(ctk.CTk):
         # Botón para ver carpeta de archivos
         btn_folder = ctk.CTkButton(
             btn_frame, 
-            text="Ver Carpeta de Archivos", 
+            text="📁 Ver Carpeta de Archivos", 
             font=ctk.CTkFont(size=16),
             height=80,
             command=lambda: self.file_manager.open_folder(TRABAJOS_PATH)
         )
         btn_folder.grid(row=2, column=0, columnspan=2, padx=20, pady=20, sticky="nsew")
+        
+        # Frame para información adicional
+        info_frame = ctk.CTkFrame(main_frame)
+        info_frame.pack(fill=tk.X, padx=20, pady=(0, 10))
+        
+        # Información sobre la funcionalidad de WhatsApp
+        info_text = """
+ℹ️ Funcionalidad de WhatsApp:
+• Al registrar un trabajo, guarde los números de WhatsApp del profesional y tramitador
+• Al actualizar tasas de sellado y visados, se mostrará una ventana con el mensaje
+• Copie el mensaje y péguelo en su WhatsApp Web abierto
+• Los números pueden incluir código de país (+54) o sin él (se agregará automáticamente)
+        """
+        
+        info_label = ctk.CTkLabel(
+            info_frame, 
+            text=info_text,
+            font=ctk.CTkFont(size=12),
+            justify="left",
+            anchor="w"
+        )
+        info_label.pack(pady=15, padx=20, fill="x")
     
     def clear_window(self):
         """Limpia todos los widgets de la ventana"""

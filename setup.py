@@ -60,7 +60,7 @@ def main():
             "Visado de instalacion electrica", "Visado de instalacion electromecanica",
             "Estado pago sellado", "Estado pago visado",
             "Nro de expediente CPIM", "Fecha de salida", "Persona que retira", 
-            "Nro de Caja", "Ruta de carpeta"
+            "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
         ]
         
         # Configurar encabezados para Informes técnicos
@@ -68,7 +68,7 @@ def main():
             "Fecha", "Profesión", "Formato", "Nro de Copias", "Tipo de trabajo", 
             "Detalle", "Profesional", "Comitente", "Tasa de sellado", 
             "Estado de pago", "Nro de expediente CPIM", "Fecha de salida", 
-            "Persona que retira", "Nro de Caja", "Ruta de carpeta"
+            "Persona que retira", "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
         ]
         
         # Aplicar encabezados a las hojas
