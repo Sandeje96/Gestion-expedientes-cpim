@@ -211,6 +211,16 @@ class EditWorkWindow:
                 info_text += f"Tipo: {self.current_obra['tipo_trabajo']}\n"
                 info_text += f"Ubicación: {self.current_obra['ubicacion']}"
                 
+                # Agregar información de WhatsApp de forma sutil
+                if self.current_obra.get("whatsapp_profesional") or self.current_obra.get("whatsapp_tramitador"):
+                    info_text += "\nWhatsApp: "
+                    whatsapp_contacts = []
+                    if self.current_obra.get("whatsapp_profesional"):
+                        whatsapp_contacts.append(f"Prof: {self.current_obra['whatsapp_profesional']}")
+                    if self.current_obra.get("whatsapp_tramitador"):
+                        whatsapp_contacts.append(f"Tram: {self.current_obra['whatsapp_tramitador']}")
+                    info_text += " | ".join(whatsapp_contacts)
+                
                 ctk.CTkLabel(info_frame, text=info_text, justify=tk.LEFT).pack(pady=10, padx=10, side=tk.LEFT)
                 
                 # Botón para repetir trabajo con otro profesional
@@ -220,20 +230,6 @@ class EditWorkWindow:
                     command=lambda: self.repeat_obra_with_new_professional(obra_id)
                 )
                 btn_repeat.pack(pady=10, padx=10, side=tk.RIGHT)
-                
-                # Mostrar información de WhatsApp si existe
-                whatsapp_frame = ctk.CTkFrame(self.obra_edit_frame)
-                whatsapp_frame.pack(fill=tk.X, padx=10, pady=5)
-                
-                whatsapp_info = "📱 Contactos de WhatsApp:\n"
-                if self.current_obra.get("whatsapp_profesional"):
-                    whatsapp_info += f"Profesional: {self.current_obra['whatsapp_profesional']}\n"
-                if self.current_obra.get("whatsapp_tramitador"):
-                    whatsapp_info += f"Tramitador: {self.current_obra['whatsapp_tramitador']}\n"
-                if not self.current_obra.get("whatsapp_profesional") and not self.current_obra.get("whatsapp_tramitador"):
-                    whatsapp_info += "No hay números de WhatsApp registrados"
-                
-                ctk.CTkLabel(whatsapp_frame, text=whatsapp_info, justify=tk.LEFT).pack(pady=5, padx=10)
                 
                 # Crear campos editables
                 edit_frame = ctk.CTkFrame(self.obra_edit_frame)
@@ -591,21 +587,17 @@ class EditWorkWindow:
                 info_text += f"Tipo: {self.current_informe['tipo_trabajo']}\n"
                 info_text += f"Detalle: {self.current_informe['detalle']}"
                 
+                # Agregar información de WhatsApp de forma sutil
+                if self.current_informe.get("whatsapp_profesional") or self.current_informe.get("whatsapp_tramitador"):
+                    info_text += "\n📱 WhatsApp: "
+                    whatsapp_contacts = []
+                    if self.current_informe.get("whatsapp_profesional"):
+                        whatsapp_contacts.append(f"Prof: {self.current_informe['whatsapp_profesional']}")
+                    if self.current_informe.get("whatsapp_tramitador"):
+                        whatsapp_contacts.append(f"Tram: {self.current_informe['whatsapp_tramitador']}")
+                    info_text += " | ".join(whatsapp_contacts)
+                
                 ctk.CTkLabel(info_frame, text=info_text, justify=tk.LEFT).pack(pady=10, padx=10)
-                
-                # Mostrar información de WhatsApp si existe
-                whatsapp_frame = ctk.CTkFrame(self.informe_edit_frame)
-                whatsapp_frame.pack(fill=tk.X, padx=10, pady=5)
-                
-                whatsapp_info = "📱 Contactos de WhatsApp:\n"
-                if self.current_informe.get("whatsapp_profesional"):
-                    whatsapp_info += f"Profesional: {self.current_informe['whatsapp_profesional']}\n"
-                if self.current_informe.get("whatsapp_tramitador"):
-                    whatsapp_info += f"Tramitador: {self.current_informe['whatsapp_tramitador']}\n"
-                if not self.current_informe.get("whatsapp_profesional") and not self.current_informe.get("whatsapp_tramitador"):
-                    whatsapp_info += "No hay números de WhatsApp registrados"
-                
-                ctk.CTkLabel(whatsapp_frame, text=whatsapp_info, justify=tk.LEFT).pack(pady=5, padx=10)
                 
                 # Crear campos editables
                 edit_frame = ctk.CTkFrame(self.informe_edit_frame)
