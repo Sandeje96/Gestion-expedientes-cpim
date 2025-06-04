@@ -215,13 +215,17 @@ class WhatsAppSender:
         if not has_sellado and not has_visados:
             return []  # No hay nada que notificar
         
+        # Detectar si es obra o informe y usar los campos correctos
+        profesional_name = obra_data.get("nombre_profesional") or obra_data.get("profesional", "")
+        comitente_name = obra_data.get("nombre_comitente") or obra_data.get("comitente", "")
+
         # Crear mensaje
         message = self.create_payment_message(
-            obra_data.get("nombre_profesional", ""),
-            obra_data.get("nombre_comitente", ""),
+            profesional_name,
+            comitente_name,
             tasa_sellado if has_sellado else "",
             total_visados
-        )
+)
         
         # Enviar a profesional
         phone_profesional = obra_data.get("whatsapp_profesional")
