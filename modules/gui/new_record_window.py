@@ -146,6 +146,8 @@ class NewRecordWindow:
         # Nombre del profesional (con autocompletado)
         ctk.CTkLabel(scroll_frame, text="Nombre del Profesional:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
         self.prof_entry = AutocompleteEntry(scroll_frame, options=profesionales)
+        # Configurar callback para autocompletar WhatsApp cuando cambie el profesional
+        self.prof_entry.entry_var.trace_add("write", self.on_profesional_change_obra)
         self.prof_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         self.obra_vars["nombre_profesional"] = self.prof_entry
         row += 1
@@ -343,6 +345,8 @@ class NewRecordWindow:
         # Profesional (con autocompletado)
         ctk.CTkLabel(scroll_frame, text="Profesional:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
         self.informe_prof_entry = AutocompleteEntry(scroll_frame, options=profesionales)
+        # Configurar callback para autocompletar WhatsApp cuando cambie el profesional
+        self.informe_prof_entry.entry_var.trace_add("write", self.on_profesional_change_informe)
         self.informe_prof_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         self.informe_vars["profesional"] = self.informe_prof_entry
         row += 1
@@ -736,6 +740,32 @@ class NewRecordWindow:
                     self.informe_selected_files.append(file)
                     # Mostrar solo el nombre del archivo en la lista
                     self.informe_files_listbox.insert(tk.END, os.path.basename(file))
+
+    def on_profesional_change_obra(self, *args):
+        """Se ejecuta cuando cambia el nombre del profesional en obras"""
+        try:
+            nombre_profesional = self.prof_entry.get().strip()
+            if nombre_profesional:
+                # Buscar si este profesional ya tiene un WhatsApp registrado
+                whatsapp = self.data_manager.get_whatsapp_by_profesional(nombre_profesional)
+                if whatsapp:
+                    # Autocompletar el campo de WhatsApp
+                    self.obra_vars["whatsapp_profesional"].set(whatsapp)
+        except Exception as e:
+            print(f"Error al autocompletar WhatsApp en obra: {e}")
+
+    def on_profesional_change_informe(self, *args):
+        """Se ejecuta cuando cambia el nombre del profesional en informes"""
+        try:
+            nombre_profesional = self.informe_prof_entry.get().strip()
+            if nombre_profesional:
+                # Buscar si este profesional ya tiene un WhatsApp registrado
+                whatsapp = self.data_manager.get_whatsapp_by_profesional(nombre_profesional)
+                if whatsapp:
+                    # Autocompletar el campo de WhatsApp
+                    self.informe_vars["whatsapp_profesional"].set(whatsapp)
+        except Exception as e:
+            print(f"Error al autocompletar WhatsApp en informe: {e}")
         
 
         

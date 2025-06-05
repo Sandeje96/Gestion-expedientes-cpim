@@ -126,6 +126,8 @@ class AutocompleteEntry(ctk.CTkFrame):
             self.entry_var.set(self.matches[index])
             self.hide_dropdown()
             self.entry.focus_set()
+            # Trigger any trace callbacks after selection
+            self.entry_var.set(self.entry_var.get())  # Force trace to execute
     
     def on_down(self, event):
         """Maneja la tecla de flecha abajo"""

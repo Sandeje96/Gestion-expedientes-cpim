@@ -187,6 +187,65 @@ class DataManager:
         except Exception as e:
             print(f"Error al obtener profesionales: {e}")
             return []
+        
+    def get_whatsapp_by_profesional(self, nombre_profesional):
+        """Obtiene el número de WhatsApp asociado a un profesional"""
+        try:
+            workbook = openpyxl.load_workbook(str(self.excel_file))
+            
+            # Buscar en la hoja "Obras en general"
+            if "Obras en general" in workbook.sheetnames:
+                sheet = workbook["Obras en general"]
+                for row in range(2, sheet.max_row + 1):
+                    profesional = sheet.cell(row=row, column=6).value
+                    whatsapp = sheet.cell(row=row, column=25).value
+                    if profesional and profesional.strip().lower() == nombre_profesional.strip().lower():
+                        if whatsapp and whatsapp.strip():
+                            return whatsapp.strip()
+            
+            # Buscar en la hoja "Informes técnicos"
+            if "Informes técnicos" in workbook.sheetnames:
+                sheet = workbook["Informes técnicos"]
+                for row in range(2, sheet.max_row + 1):
+                    profesional = sheet.cell(row=row, column=7).value
+                    whatsapp = sheet.cell(row=row, column=16).value
+                    if profesional and profesional.strip().lower() == nombre_profesional.strip().lower():
+                        if whatsapp and whatsapp.strip():
+                            return whatsapp.strip()
+            
+            return None
+        except Exception as e:
+            print(f"Error al obtener WhatsApp del profesional: {e}")
+            return None
+        
+    def get_profesionales_with_whatsapp(self):
+        """Obtiene un diccionario de profesionales con sus números de WhatsApp"""
+        try:
+            workbook = openpyxl.load_workbook(str(self.excel_file))
+            profesionales_whatsapp = {}
+            
+            # Buscar en la hoja "Obras en general"
+            if "Obras en general" in workbook.sheetnames:
+                sheet = workbook["Obras en general"]
+                for row in range(2, sheet.max_row + 1):
+                    profesional = sheet.cell(row=row, column=6).value
+                    whatsapp = sheet.cell(row=row, column=25).value
+                    if profesional and whatsapp and whatsapp.strip():
+                        profesionales_whatsapp[profesional.strip()] = whatsapp.strip()
+            
+            # Buscar en la hoja "Informes técnicos"
+            if "Informes técnicos" in workbook.sheetnames:
+                sheet = workbook["Informes técnicos"]
+                for row in range(2, sheet.max_row + 1):
+                    profesional = sheet.cell(row=row, column=7).value
+                    whatsapp = sheet.cell(row=row, column=16).value
+                    if profesional and whatsapp and whatsapp.strip():
+                        profesionales_whatsapp[profesional.strip()] = whatsapp.strip()
+            
+            return profesionales_whatsapp
+        except Exception as e:
+            print(f"Error al obtener profesionales con WhatsApp: {e}")
+            return {}
 
     def get_all_comitentes(self):
         """Obtiene la lista de todos los comitentes registrados"""
