@@ -680,6 +680,15 @@ class NewRecordWindow:
             
         except Exception as e:
             messagebox.showerror("Error", f"No se pudieron copiar todos los datos: {str(e)}")
+
+    def add_files_to_list(self):
+        """Añade archivos a la lista de archivos seleccionados"""
+        filetypes = [
+            ("Documentos", "*.pdf;*.doc;*.docx"),
+            ("Archivos PDF", "*.pdf"),
+            ("Documentos Word", "*.doc;*.docx"),
+            ("Todos los archivos", "*.*")
+        ]
         
         # Abrir diálogo para seleccionar archivos
         files = filedialog.askopenfilenames(
@@ -704,7 +713,7 @@ class NewRecordWindow:
             for index in sorted(selected_indices, reverse=True):
                 del self.selected_files[index]
                 self.files_listbox.delete(index)
-    
+
     def add_files_to_informe_list(self):
         """Añade archivos a la lista de archivos seleccionados para informes"""
         filetypes = [
@@ -713,4 +722,20 @@ class NewRecordWindow:
             ("Documentos Word", "*.doc;*.docx"),
             ("Todos los archivos", "*.*")
         ]
+        
+        # Abrir diálogo para seleccionar archivos
+        files = filedialog.askopenfilenames(
+            title="Seleccionar archivos",
+            filetypes=filetypes
+        )
+        
+        if files:
+            # Añadir archivos a la lista
+            for file in files:
+                if file not in self.informe_selected_files:
+                    self.informe_selected_files.append(file)
+                    # Mostrar solo el nombre del archivo en la lista
+                    self.informe_files_listbox.insert(tk.END, os.path.basename(file))
+        
+
         
