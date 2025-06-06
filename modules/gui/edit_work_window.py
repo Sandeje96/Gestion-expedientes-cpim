@@ -308,6 +308,26 @@ class EditWorkWindow:
                     self.edit_obra_vars[field_name] = entry
                     row += 1
                 
+                # Añadir separador para WhatsApp
+                ctk.CTkLabel(edit_frame, text="Datos de WhatsApp", font=("Arial", 12, "bold")).grid(row=row, column=0, columnspan=2, sticky="w", pady=(15, 5), padx=5)
+                row += 1
+                
+                # WhatsApp del profesional
+                ctk.CTkLabel(edit_frame, text="WhatsApp Profesional:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+                whatsapp_prof_entry = ctk.CTkEntry(edit_frame, placeholder_text="Ej: +5493755123456 o 3755123456")
+                whatsapp_prof_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+                whatsapp_prof_entry.insert(0, self.current_obra["whatsapp_profesional"] if self.current_obra["whatsapp_profesional"] else "")
+                self.edit_obra_vars["whatsapp_profesional"] = whatsapp_prof_entry
+                row += 1
+                
+                # WhatsApp del tramitador
+                ctk.CTkLabel(edit_frame, text="WhatsApp Tramitador:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+                whatsapp_tram_entry = ctk.CTkEntry(edit_frame, placeholder_text="Ej: +5493755123456 o 3755123456")
+                whatsapp_tram_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+                whatsapp_tram_entry.insert(0, self.current_obra["whatsapp_tramitador"] if self.current_obra["whatsapp_tramitador"] else "")
+                self.edit_obra_vars["whatsapp_tramitador"] = whatsapp_tram_entry
+                row += 1
+                
                 # Si es formato digital, mostrar botón para abrir carpeta
                 if self.current_obra["formato"] == "Digital" and self.current_obra["ruta_carpeta"]:
                     btn_open_folder = ctk.CTkButton(
@@ -372,14 +392,19 @@ class EditWorkWindow:
                     any(v and v.strip() for v in visados.values())
                 )
                 
-                if should_send_whatsapp and (
-                    self.current_obra.get("whatsapp_profesional") or 
-                    self.current_obra.get("whatsapp_tramitador")
-                ):
+                # Verificar números de WhatsApp actualizados
+                whatsapp_prof_actualizado = data.get("whatsapp_profesional", self.current_obra.get("whatsapp_profesional", ""))
+                whatsapp_tram_actualizado = data.get("whatsapp_tramitador", self.current_obra.get("whatsapp_tramitador", ""))
+                
+                if should_send_whatsapp and (whatsapp_prof_actualizado or whatsapp_tram_actualizado):
                     try:
+                        # Crear datos actualizados para WhatsApp
+                        obra_actualizada = self.current_obra.copy()
+                        obra_actualizada.update(data)
+                        
                         # Usar el método mejorado que no abre nuevas pestañas
                         results = self.whatsapp_sender.send_payment_notifications(
-                            self.current_obra, tasa_sellado, visados, use_simple_method=False
+                            obra_actualizada, tasa_sellado, visados, use_simple_method=False
                         )
                         
                         # Mostrar resultado del envío de WhatsApp
@@ -399,6 +424,12 @@ class EditWorkWindow:
                             messagebox.showinfo("Éxito", "Cambios guardados correctamente. Si existen trabajos similares de otros profesionales, también se han actualizado sus datos de salida.\n\nNota: Hubo un problema al enviar los mensajes de WhatsApp.")
                         else:
                             messagebox.showinfo("Éxito", "Cambios guardados correctamente.\n\nNota: Hubo un problema al enviar los mensajes de WhatsApp.")
+                elif should_send_whatsapp and not (whatsapp_prof_actualizado or whatsapp_tram_actualizado):
+                    # Hay tasas para enviar pero no hay números de WhatsApp
+                    if es_actualizacion_salida:
+                        messagebox.showinfo("Éxito", "Cambios guardados correctamente. Si existen trabajos similares de otros profesionales, también se han actualizado sus datos de salida.\n\n💡 Consejo: Para enviar notificaciones automáticas por WhatsApp, complete los campos de WhatsApp del profesional o tramitador.")
+                    else:
+                        messagebox.showinfo("Éxito", "Cambios guardados correctamente.\n\n💡 Consejo: Para enviar notificaciones automáticas por WhatsApp, complete los campos de WhatsApp del profesional o tramitador.")
                 else:
                     if es_actualizacion_salida:
                         messagebox.showinfo("Éxito", "Cambios guardados correctamente. Si existen trabajos similares de otros profesionales, también se han actualizado sus datos de salida.")
@@ -642,6 +673,26 @@ class EditWorkWindow:
                     self.edit_informe_vars[field_name] = entry
                     row += 1
                 
+                # Añadir separador para WhatsApp
+                ctk.CTkLabel(edit_frame, text="Datos de WhatsApp", font=("Arial", 12, "bold")).grid(row=row, column=0, columnspan=2, sticky="w", pady=(15, 5), padx=5)
+                row += 1
+                
+                # WhatsApp del profesional
+                ctk.CTkLabel(edit_frame, text="WhatsApp Profesional:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+                whatsapp_prof_entry = ctk.CTkEntry(edit_frame, placeholder_text="Ej: +5493755123456 o 3755123456")
+                whatsapp_prof_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+                whatsapp_prof_entry.insert(0, self.current_informe["whatsapp_profesional"] if self.current_informe["whatsapp_profesional"] else "")
+                self.edit_informe_vars["whatsapp_profesional"] = whatsapp_prof_entry
+                row += 1
+                
+                # WhatsApp del tramitador
+                ctk.CTkLabel(edit_frame, text="WhatsApp Tramitador:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+                whatsapp_tram_entry = ctk.CTkEntry(edit_frame, placeholder_text="Ej: +5493755123456 o 3755123456")
+                whatsapp_tram_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+                whatsapp_tram_entry.insert(0, self.current_informe["whatsapp_tramitador"] if self.current_informe["whatsapp_tramitador"] else "")
+                self.edit_informe_vars["whatsapp_tramitador"] = whatsapp_tram_entry
+                row += 1
+                
                 # Si es formato digital, mostrar botón para abrir carpeta
                 if self.current_informe["formato"] == "Digital" and self.current_informe["ruta_carpeta"]:
                     btn_open_folder = ctk.CTkButton(
@@ -693,15 +744,20 @@ class EditWorkWindow:
                 # Enviar WhatsApp si hay tasa definida y números de WhatsApp
                 should_send_whatsapp = tasa_sellado and tasa_sellado.strip()
                 
-                if should_send_whatsapp and (
-                    self.current_informe.get("whatsapp_profesional") or 
-                    self.current_informe.get("whatsapp_tramitador")
-                ):
+                # Verificar números de WhatsApp actualizados
+                whatsapp_prof_actualizado = data.get("whatsapp_profesional", self.current_informe.get("whatsapp_profesional", ""))
+                whatsapp_tram_actualizado = data.get("whatsapp_tramitador", self.current_informe.get("whatsapp_tramitador", ""))
+                
+                if should_send_whatsapp and (whatsapp_prof_actualizado or whatsapp_tram_actualizado):
                     try:
+                        # Crear datos actualizados para WhatsApp
+                        informe_actualizado = self.current_informe.copy()
+                        informe_actualizado.update(data)
+                        
                         # Para informes, no hay visados específicos, solo tasa de sellado
                         visados = {}
                         results = self.whatsapp_sender.send_payment_notifications(
-                            self.current_informe, tasa_sellado, visados, use_simple_method=False
+                            informe_actualizado, tasa_sellado, visados, use_simple_method=False
                         )
                         
                         # Mostrar resultado del envío de WhatsApp
@@ -714,6 +770,9 @@ class EditWorkWindow:
                     except Exception as whatsapp_error:
                         print(f"Error al enviar WhatsApp: {whatsapp_error}")
                         messagebox.showinfo("Éxito", "Cambios guardados correctamente.\n\nNota: Hubo un problema al enviar los mensajes de WhatsApp.")
+                elif should_send_whatsapp and not (whatsapp_prof_actualizado or whatsapp_tram_actualizado):
+                    # Hay tasa para enviar pero no hay números de WhatsApp
+                    messagebox.showinfo("Éxito", "Cambios guardados correctamente.\n\n💡 Consejo: Para enviar notificaciones automáticas por WhatsApp, complete los campos de WhatsApp del profesional o tramitador.")
                 else:
                     messagebox.showinfo("Éxito", "Cambios guardados correctamente.")
             else:
