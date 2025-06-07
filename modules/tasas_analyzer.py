@@ -1,4 +1,5 @@
 import openpyxl
+import openpyxl.utils
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -327,7 +328,7 @@ class TasasAnalyzer:
             return False
     
     def exportar_a_excel(self, analisis, ruta_archivo):
-        """Exporta el análisis a un archivo Excel"""
+        """Exporta el análisis a un archivo Excel con auto-ajuste de columnas"""
         try:
             workbook = openpyxl.Workbook()
             sheet = workbook.active
@@ -420,9 +421,8 @@ class TasasAnalyzer:
             row += 2
             self._escribir_resumen_totales(sheet, row, analisis, header_font, header_fill, border)
             
-            # Ajustar ancho de columnas
-            for col in range(1, 12):
-                sheet.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 15
+            # APLICAR AUTO-AJUSTE DE COLUMNAS AL FINAL
+            self._auto_ajustar_columnas_mejorado(sheet)
             
             # Guardar archivo
             workbook.save(ruta_archivo)
@@ -431,23 +431,71 @@ class TasasAnalyzer:
         except Exception as e:
             print(f"Error al exportar a Excel: {e}")
             return None
-        
-    def _auto_ajustar_columnas(self, sheet):
+
+    def _auto_ajustar_columnas_mejorado(self, sheet):
         """Ajusta automáticamente el ancho de todas las columnas basándose en el contenido"""
-        for col in sheet.columns:  # ← Esto itera por TODAS las columnas
+        # Obtener el rango de columnas usado
+        max_column = sheet.max_column
+        
+        for col_num in range(1, max_column + 1):
             max_length = 0
-            column = col[0].column_letter
+            column_letter = openpyxl.utils.get_column_letter(col_num)
             
-            for cell in col:  # ← Revisa TODAS las celdas de cada columna
+            # Iterar por todas las filas de esta columna
+            for row_num in range(1, sheet.max_row + 1):
+                cell = sheet.cell(row=row_num, column=col_num)
+                
+                # Saltar celdas que son parte de un merge (excepto la celda principal)
+                if hasattr(cell, 'coordinate'):
+                    is_merged = any(
+                        cell.coordinate in merged_range 
+                        for merged_range in sheet.merged_cells.ranges
+                    )
+                    if is_merged:
+                        # Si es una celda combinada, usar solo la celda principal para calcular
+                        merged_range = next(
+                            (mr for mr in sheet.merged_cells.ranges if cell.coordinate in mr), 
+                            None
+                        )
+                        if merged_range and cell.coordinate != merged_range.start_cell.coordinate:
+                            continue
+                
                 if cell.value:
-                    cell_length = len(str(cell.value))  # ← Cualquier tipo de contenido
+                    # Convertir a string y manejar diferentes tipos de contenido
+                    if isinstance(cell.value, (int, float)):
+                        # Para números con formato de moneda, considerar el texto formateado
+                        if cell.number_format and '$' in cell.number_format:
+                            # Simular formato de moneda para calcular longitud
+                            cell_length = len(f"${cell.value:,.2f}")
+                        else:
+                            cell_length = len(str(cell.value))
+                    else:
+                        cell_length = len(str(cell.value))
+                    
+                    # Ajustar por fuente en negrita (ocupa más espacio)
+                    if cell.font and cell.font.bold:
+                        cell_length = int(cell_length * 1.2)
+                    
+                    # Para celdas combinadas, dividir el ancho entre las columnas combinadas
+                    if hasattr(cell, 'coordinate'):
+                        merged_range = next(
+                            (mr for mr in sheet.merged_cells.ranges if cell.coordinate in mr), 
+                            None
+                        )
+                        if merged_range:
+                            # Calcular cuántas columnas abarca el merge
+                            cols_in_merge = merged_range.max_col - merged_range.min_col + 1
+                            if cols_in_merge > 1:
+                                cell_length = cell_length // cols_in_merge
+                    
                     if cell_length > max_length:
                         max_length = cell_length
             
-            # Ajusta CUALQUIER columna basándose en su contenido más largo
-            adjusted_width = min(max(max_length + 2, 10), 50)
-            sheet.column_dimensions[column].width = adjusted_width
-    
+            # Calcular ancho ajustado con padding adicional
+            # Mínimo de 12, máximo de 50 para evitar columnas extremas
+            adjusted_width = min(max(max_length + 3, 12), 50)
+            sheet.column_dimensions[column_letter].width = adjusted_width
+        
     def _escribir_fila_obra(self, sheet, row, obra, border):
         """Escribe una fila de obra en el Excel"""
         # Calcular total de visados
@@ -477,10 +525,7 @@ class TasasAnalyzer:
             
             # Formato para números - FORMATO CORREGIDO
             if col in [4, 5, 6, 7, 8] and isinstance(valor, (int, float)) and valor > 0:
-                cell.number_format = '"$"#,##0.00'  # ← CAMBIO AQUÍ: formato argentino
-
-
-    # También reemplaza el método _escribir_resumen_totales para corregir otros formatos
+                cell.number_format = '"$"#,##0.00'
     
     def _escribir_resumen_totales(self, sheet, start_row, analisis, header_font, header_fill, border):
         """Escribe el resumen de totales en el Excel con formato mejorado"""
@@ -495,7 +540,6 @@ class TasasAnalyzer:
         titulo_font = Font(bold=True, size=14, color="FFFFFF")
         subtitulo_font = Font(bold=True, size=12)
         total_font = Font(bold=True, size=11)
-        
         
         # ============ SECCIÓN 2: TOTALES POR TIPO DE VISADO ============
         sheet.merge_cells(f'A{row}:H{row}')
@@ -533,10 +577,10 @@ class TasasAnalyzer:
             cell.border = border
             cell.font = Font(size=10)
             
-            # Total pagado - FORMATO CORREGIDO
+            # Total pagado
             cell = sheet.cell(row=row, column=2, value=total)
             cell.border = border
-            cell.number_format = '"$"#,##0.00'  # ← CAMBIO AQUÍ
+            cell.number_format = '"$"#,##0.00'
             cell.font = Font(size=10, bold=True)
             
             # Ingeniero responsable
@@ -578,22 +622,22 @@ class TasasAnalyzer:
             cell.fill = ingeniero_fill
             cell.font = Font(size=10, bold=True)
             
-            # Total de tasas - FORMATO CORREGIDO
+            # Total de tasas
             cell = sheet.cell(row=row, column=2, value=datos['total'])
             cell.border = border
-            cell.number_format = '"$"#,##0.00'  # ← CAMBIO AQUÍ
+            cell.number_format = '"$"#,##0.00'
             cell.font = Font(size=10, bold=True)
             
-            # Para el consejo (30%) - FORMATO CORREGIDO
+            # Para el consejo (30%)
             cell = sheet.cell(row=row, column=3, value=datos['consejo'])
             cell.border = border
-            cell.number_format = '"$"#,##0.00'  # ← CAMBIO AQUÍ
+            cell.number_format = '"$"#,##0.00'
             cell.font = Font(size=10)
             
-            # Para el ingeniero (70%) - FORMATO CORREGIDO
+            # Para el ingeniero (70%)
             cell = sheet.cell(row=row, column=4, value=datos['ingeniero'])
             cell.border = border
-            cell.number_format = '"$"#,##0.00'  # ← CAMBIO AQUÍ
+            cell.number_format = '"$"#,##0.00'
             cell.font = Font(size=10, bold=True)
             
             # Tipos de visado
@@ -635,26 +679,11 @@ class TasasAnalyzer:
             cell.fill = total_fill
             cell.border = border
             
-            # Value - FORMATO CORREGIDO
+            # Value
             cell = sheet.cell(row=row, column=2, value=value)
             cell.font = total_font
             cell.fill = total_fill
             cell.border = border
-            cell.number_format = '"$"#,##0.00'  # ← CAMBIO AQUÍ
+            cell.number_format = '"$"#,##0.00'
             
             row += 1
-        
-        # Ajustar ancho de columnas para mejor visualización
-        column_widths = {
-            'A': 25,  # Ingeniero/Tipo
-            'B': 15,  # Total Tasas
-            'C': 18,  # Para Consejo
-            'D': 18,  # Para Ingeniero
-            'E': 20,  # Tipos de Visado
-            'F': 15,
-            'G': 15,
-            'H': 15
-        }
-        
-        for col, width in column_widths.items():
-            sheet.column_dimensions[col].width = width
