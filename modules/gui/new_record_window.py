@@ -6,6 +6,7 @@ import shutil
 from datetime import datetime
 from config import PROFESIONES, TIPOS_OBRA, TIPOS_INFORME
 from .autocomplete_widget import AutocompleteEntry
+from .currency_entry import CurrencyEntry
 
 
 class NewRecordWindow:
@@ -176,18 +177,18 @@ class NewRecordWindow:
         
         # Tasa de sellado
         ctk.CTkLabel(scroll_frame, text="Tasa de Sellado:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
-        ctk.CTkEntry(scroll_frame, textvariable=self.obra_vars["tasa_sellado"]).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+        CurrencyEntry(scroll_frame, textvariable=self.obra_vars["tasa_sellado"]).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         row += 1
-        
+
         # Tasa de visado (mantenemos este campo para compatibilidad)
         ctk.CTkLabel(scroll_frame, text="Tasa de Visado (General):").grid(row=row, column=0, sticky="w", pady=5, padx=5)
-        ctk.CTkEntry(scroll_frame, textvariable=self.obra_vars["tasa_visado"]).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+        CurrencyEntry(scroll_frame, textvariable=self.obra_vars["tasa_visado"]).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         row += 1
-        
+
         # Añadir un separador o título para la sección de visados específicos
         ctk.CTkLabel(scroll_frame, text="Visados Específicos", font=("Arial", 12, "bold")).grid(row=row, column=0, columnspan=2, sticky="w", pady=(15, 5), padx=5)
         row += 1
-        
+
         # Visados específicos
         visados = [
             ("Visado de instalación de Gas:", "visado_gas"),
@@ -195,10 +196,10 @@ class NewRecordWindow:
             ("Visado de instalación eléctrica:", "visado_electrica"),
             ("Visado de instalación electromecánica:", "visado_electromecanica")
         ]
-        
+
         for label_text, var_name in visados:
             ctk.CTkLabel(scroll_frame, text=label_text).grid(row=row, column=0, sticky="w", pady=5, padx=5)
-            ctk.CTkEntry(scroll_frame, textvariable=self.obra_vars[var_name]).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+            CurrencyEntry(scroll_frame, textvariable=self.obra_vars[var_name]).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
             row += 1
         
         # Añadir separador para WhatsApp
@@ -360,7 +361,7 @@ class NewRecordWindow:
         
         # Tasa de sellado
         ctk.CTkLabel(scroll_frame, text="Tasa de Sellado:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
-        ctk.CTkEntry(scroll_frame, textvariable=self.informe_vars["tasa_sellado"]).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+        CurrencyEntry(scroll_frame, textvariable=self.informe_vars["tasa_sellado"]).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         row += 1
         
         # Añadir separador para WhatsApp

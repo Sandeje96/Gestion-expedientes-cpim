@@ -3,6 +3,7 @@ import customtkinter as ctk
 from tkinter import messagebox
 from .autocomplete_widget import AutocompleteEntry
 from ..whatsapp_sender import WhatsAppSender
+from .currency_entry import CurrencyEntry
 
 
 class EditWorkWindow:
@@ -97,22 +98,22 @@ class EditWorkWindow:
         # Configurar grid para ser responsive
         search_frame.grid_columnconfigure(2, weight=1)
         
-        # Obtener todas las obras
+        # Obtener todas las OBRAS (no informes)
         self.obras = self.data_manager.get_all_works("obra")
         
-        # Crear lista de obras para mostrar
+        # Crear lista de OBRAS para mostrar
         obras_display = []
         for obra in self.obras:
             display = f"{obra['nombre_profesional']} - {obra['nombre_comitente']} ({obra['fecha']})"
             obras_display.append(display)
         
-        # Selector de obra
+        # Selector de OBRA
         selection_menu_frame = ctk.CTkFrame(selection_frame)
         selection_menu_frame.pack(fill=tk.X, padx=10, pady=10)
         
         ctk.CTkLabel(selection_menu_frame, text="Seleccionar Obra:").pack(side=tk.LEFT, padx=5)
         
-        # Usamos una variable separada para el texto mostrado
+        # Variable para OBRA
         self.obra_selector_var = ctk.StringVar(value="Seleccione una obra" if obras_display else "No hay obras registradas")
         
         self.obra_selector = ctk.CTkOptionMenu(
@@ -125,7 +126,7 @@ class EditWorkWindow:
         )
         self.obra_selector.pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
         
-        # Frame para los datos de la obra seleccionada
+        # Frame para los datos de la OBRA seleccionada
         self.obra_edit_frame = ctk.CTkScrollableFrame(parent)
         self.obra_edit_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
@@ -134,6 +135,243 @@ class EditWorkWindow:
         
         # Indicar que no hay obra seleccionada
         ctk.CTkLabel(self.obra_edit_frame, text="Seleccione una obra para editar", font=ctk.CTkFont(size=14, weight="bold")).pack(pady=20)
+    
+    def search_informes(self):
+        """Busca informes según el criterio seleccionado"""
+        search_text = self.informe_search_entry.get().strip().lower()
+        search_option = self.informe_search_option_var.get()
+        
+        if not search_text:
+            messagebox.showwarning("Búsqueda vacía", "Por favor ingrese un texto para buscar")
+            return
+        
+        # Obtener todos los informes de nuevo (por si se agregaron nuevos)
+        self.informes = self.data_manager.get_all_works("informe")
+        
+        # Filtrar según el criterio
+        filtered_informes = []
+        
+        for informe in self.informes:
+            # Obtener informe completo para acceder a todos los campos
+            informe_completo = self.data_manager.get_work_by_id("informe", informe["id"])
+            
+            if informe_completo:
+                if search_option == "Profesional" and informe_completo["profesional"] and search_text in informe_completo["profesional"].lower():
+                    filtered_informes.append(informe)
+                elif search_option == "Comitente" and informe_completo["comitente"] and search_text in informe_completo["comitente"].lower():
+                    filtered_informes.append(informe)
+                elif search_option == "Tipo de Informe" and informe_completo["tipo_trabajo"] and search_text in str(informe_completo["tipo_trabajo"]).lower():
+                    filtered_informes.append(informe)
+        
+        # Actualizar la lista de informes mostrados
+        if filtered_informes:
+            informes_display = []
+            for informe in filtered_informes:
+                display = f"{informe['profesional']} - {informe['comitente']} ({informe['fecha']})"
+                informes_display.append(display)
+            
+            # Guardar la lista filtrada
+            self.informes = filtered_informes
+            
+            # Actualizar el selector
+            self.informe_selector.configure(values=informes_display)
+            self.informe_selector_var.set(informes_display[0])
+            
+            # Seleccionar el primer informe
+            self.on_informe_selected(informes_display[0])
+        else:
+            messagebox.showinfo("Búsqueda", f"No se encontraron informes que coincidan con '{search_text}' en {search_option}")
+    
+    def on_informe_selected(self, selection):
+        """Maneja la selección de un informe para editar"""
+        # Limpiar el frame de edición
+        for widget in self.informe_edit_frame.winfo_children():
+            widget.destroy()
+        
+        # Obtener el índice del informe seleccionado
+        try:
+            if not selection or selection == "No hay informes registrados":
+                ctk.CTkLabel(self.informe_edit_frame, text="No hay informes disponibles para editar", font=ctk.CTkFont(size=14, weight="bold")).pack(pady=20)
+                return
+                
+            index = self.informe_selector.cget("values").index(selection)
+            informe_id = self.informes[index]["id"]
+            
+            # Obtener los datos completos del informe
+            self.current_informe = self.data_manager.get_work_by_id("informe", informe_id)
+            
+            if self.current_informe:
+                # Mostrar información no editable
+                info_frame = ctk.CTkFrame(self.informe_edit_frame)
+                info_frame.pack(fill=tk.X, padx=10, pady=10)
+                
+                info_text = f"Profesional: {self.current_informe['profesional']}\n"
+                info_text += f"Comitente: {self.current_informe['comitente']}\n"
+                info_text += f"Tipo: {self.current_informe['tipo_trabajo']}\n"
+                info_text += f"Detalle: {self.current_informe['detalle']}"
+                
+                # Agregar información de WhatsApp de forma sutil
+                if self.current_informe.get("whatsapp_profesional") or self.current_informe.get("whatsapp_tramitador"):
+                    info_text += "\n📱 WhatsApp: "
+                    whatsapp_contacts = []
+                    if self.current_informe.get("whatsapp_profesional"):
+                        whatsapp_contacts.append(f"Prof: {self.current_informe['whatsapp_profesional']}")
+                    if self.current_informe.get("whatsapp_tramitador"):
+                        whatsapp_contacts.append(f"Tram: {self.current_informe['whatsapp_tramitador']}")
+                    info_text += " | ".join(whatsapp_contacts)
+                
+                ctk.CTkLabel(info_frame, text=info_text, justify=tk.LEFT).pack(pady=10, padx=10)
+                
+                # Crear campos editables
+                edit_frame = ctk.CTkFrame(self.informe_edit_frame)
+                edit_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+                
+                row = 0
+                
+                # Tasa de sellado con formato de moneda
+                ctk.CTkLabel(edit_frame, text="Tasa de Sellado:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+                sellado_entry = CurrencyEntry(edit_frame)
+                sellado_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+                sellado_entry.set(self.current_informe["tasa_sellado"] if self.current_informe["tasa_sellado"] else "")
+                self.edit_informe_vars["tasa_sellado"] = sellado_entry
+                row += 1
+                
+                # Estado de pago
+                ctk.CTkLabel(edit_frame, text="Estado de Pago:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+                estado_frame = ctk.CTkFrame(edit_frame)
+                estado_frame.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+                
+                self.estado_pago_var = ctk.StringVar(value=self.current_informe["estado_pago"] if self.current_informe["estado_pago"] else "No pagado")
+                ctk.CTkRadioButton(estado_frame, text="Pagado", variable=self.estado_pago_var, 
+                                value="Pagado").pack(side=tk.LEFT, padx=10)
+                ctk.CTkRadioButton(estado_frame, text="No pagado", variable=self.estado_pago_var, 
+                                value="No pagado").pack(side=tk.LEFT, padx=10)
+                self.edit_informe_vars["estado_pago"] = self.estado_pago_var
+                row += 1
+                
+                # Campos adicionales
+                additional_fields = [
+                    ("Nro. Expediente CPIM:", "nro_expediente_cpim"),
+                    ("Fecha de Salida:", "fecha_salida"),
+                    ("Persona que Retira:", "persona_retira"),
+                    ("Nro. de Caja:", "nro_caja")
+                ]
+                
+                for label_text, field_name in additional_fields:
+                    ctk.CTkLabel(edit_frame, text=label_text).grid(row=row, column=0, sticky="w", pady=5, padx=5)
+                    entry = ctk.CTkEntry(edit_frame)
+                    entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+                    entry.insert(0, self.current_informe[field_name] if self.current_informe[field_name] else "")
+                    self.edit_informe_vars[field_name] = entry
+                    row += 1
+                
+                # Añadir separador para WhatsApp
+                ctk.CTkLabel(edit_frame, text="Datos de WhatsApp", font=("Arial", 12, "bold")).grid(row=row, column=0, columnspan=2, sticky="w", pady=(15, 5), padx=5)
+                row += 1
+                
+                # WhatsApp del profesional
+                ctk.CTkLabel(edit_frame, text="WhatsApp Profesional:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+                whatsapp_prof_entry = ctk.CTkEntry(edit_frame, placeholder_text="Ej: +5493755123456 o 3755123456")
+                whatsapp_prof_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+                whatsapp_prof_entry.insert(0, self.current_informe["whatsapp_profesional"] if self.current_informe["whatsapp_profesional"] else "")
+                self.edit_informe_vars["whatsapp_profesional"] = whatsapp_prof_entry
+                row += 1
+                
+                # WhatsApp del tramitador
+                ctk.CTkLabel(edit_frame, text="WhatsApp Tramitador:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
+                whatsapp_tram_entry = ctk.CTkEntry(edit_frame, placeholder_text="Ej: +5493755123456 o 3755123456")
+                whatsapp_tram_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
+                whatsapp_tram_entry.insert(0, self.current_informe["whatsapp_tramitador"] if self.current_informe["whatsapp_tramitador"] else "")
+                self.edit_informe_vars["whatsapp_tramitador"] = whatsapp_tram_entry
+                row += 1
+                
+                # Si es formato digital, mostrar botón para abrir carpeta
+                if self.current_informe["formato"] == "Digital" and self.current_informe["ruta_carpeta"]:
+                    btn_open_folder = ctk.CTkButton(
+                        edit_frame, 
+                        text="Abrir Carpeta", 
+                        command=lambda: self.file_manager.open_folder(self.current_informe["ruta_carpeta"])
+                    )
+                    btn_open_folder.grid(row=row, column=0, pady=10, padx=5)
+                    row += 1
+                    
+                # Configurar el grid para que sea responsive
+                edit_frame.grid_columnconfigure(1, weight=1)
+                
+                # Botón para guardar cambios
+                btn_save = ctk.CTkButton(
+                    edit_frame, 
+                    text="Guardar Cambios", 
+                    font=ctk.CTkFont(size=14),
+                    command=lambda: self.save_informe_changes(informe_id)
+                )
+                btn_save.grid(row=row, column=0, columnspan=2, pady=20, padx=5, sticky="ew")
+            else:
+                ctk.CTkLabel(self.informe_edit_frame, text="No se pudo cargar la información del informe", font=ctk.CTkFont(size=14, weight="bold")).pack(pady=20)
+        
+        except Exception as e:
+            print(f"Error al cargar el informe: {e}")
+            ctk.CTkLabel(self.informe_edit_frame, text=f"Error al cargar el informe: {str(e)}", font=ctk.CTkFont(size=14, weight="bold")).pack(pady=20)
+            
+    def save_informe_changes(self, informe_id):
+        """Guarda los cambios realizados a un informe"""
+        try:
+            # Obtener datos del formulario
+            data = {}
+            
+            # Para entradas normales
+            for key, widget in self.edit_informe_vars.items():
+                if key in ["estado_pago"]:
+                    # Para StringVars (radiobuttons)
+                    data[key] = widget.get()
+                else:
+                    # Para widgets Entry y CurrencyEntry
+                    data[key] = widget.get()
+            
+            # Guardar cambios
+            if self.data_manager.update_informe_tecnico(informe_id, data):
+                # Verificar si hay tasa para enviar WhatsApp
+                tasa_sellado = data.get("tasa_sellado", "")
+                
+                # Enviar WhatsApp si hay tasa definida y números de WhatsApp
+                should_send_whatsapp = tasa_sellado and tasa_sellado.strip()
+                
+                # Verificar números de WhatsApp actualizados
+                whatsapp_prof_actualizado = data.get("whatsapp_profesional", self.current_informe.get("whatsapp_profesional", ""))
+                whatsapp_tram_actualizado = data.get("whatsapp_tramitador", self.current_informe.get("whatsapp_tramitador", ""))
+                
+                if should_send_whatsapp and (whatsapp_prof_actualizado or whatsapp_tram_actualizado):
+                    try:
+                        # Crear datos actualizados para WhatsApp
+                        informe_actualizado = self.current_informe.copy()
+                        informe_actualizado.update(data)
+                        
+                        # Para informes, no hay visados específicos, solo tasa de sellado
+                        visados = {}
+                        results = self.whatsapp_sender.send_payment_notifications(
+                            informe_actualizado, tasa_sellado, visados, use_simple_method=False
+                        )
+                        
+                        # Mostrar resultado del envío de WhatsApp
+                        whatsapp_msg = "WhatsApp enviado a:\n"
+                        for tipo, numero, exito in results:
+                            status = "✅ Enviado" if exito else "❌ Error"
+                            whatsapp_msg += f"• {tipo} ({numero}): {status}\n"
+                        
+                        messagebox.showinfo("Éxito", f"Cambios guardados correctamente.\n\n{whatsapp_msg}")
+                    except Exception as whatsapp_error:
+                        print(f"Error al enviar WhatsApp: {whatsapp_error}")
+                        messagebox.showinfo("Éxito", "Cambios guardados correctamente.\n\nNota: Hubo un problema al enviar los mensajes de WhatsApp.")
+                elif should_send_whatsapp and not (whatsapp_prof_actualizado or whatsapp_tram_actualizado):
+                    # Hay tasa para enviar pero no hay números de WhatsApp
+                    messagebox.showinfo("Éxito", "Cambios guardados correctamente.\n\n💡 Consejo: Para enviar notificaciones automáticas por WhatsApp, complete los campos de WhatsApp del profesional o tramitador.")
+                else:
+                    messagebox.showinfo("Éxito", "Cambios guardados correctamente.")
+            else:
+                messagebox.showerror("Error", "No se pudieron guardar los cambios.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al guardar cambios: {str(e)}")
+        
     
     def search_obras(self):
         """Busca obras según el criterio seleccionado"""
@@ -237,12 +475,12 @@ class EditWorkWindow:
                 
                 row = 0
                 
-                # Crear widgets temporales separados de las variables
+                # Crear widgets con formato de moneda
                 # Tasa de sellado
                 ctk.CTkLabel(edit_frame, text="Tasa de Sellado:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
-                sellado_entry = ctk.CTkEntry(edit_frame)
+                sellado_entry = CurrencyEntry(edit_frame)
                 sellado_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
-                sellado_entry.insert(0, self.current_obra["tasa_sellado"] if self.current_obra["tasa_sellado"] else "")
+                sellado_entry.set(self.current_obra["tasa_sellado"] if self.current_obra["tasa_sellado"] else "")
                 self.edit_obra_vars["tasa_sellado"] = sellado_entry
                 row += 1
                 
@@ -260,9 +498,9 @@ class EditWorkWindow:
                 
                 for label_text, field_name in visados:
                     ctk.CTkLabel(edit_frame, text=label_text).grid(row=row, column=0, sticky="w", pady=5, padx=5)
-                    entry = ctk.CTkEntry(edit_frame)
+                    entry = CurrencyEntry(edit_frame)
                     entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
-                    entry.insert(0, self.current_obra[field_name] if self.current_obra[field_name] else "")
+                    entry.set(self.current_obra[field_name] if self.current_obra[field_name] else "")
                     self.edit_obra_vars[field_name] = entry
                     row += 1
                 
@@ -368,7 +606,7 @@ class EditWorkWindow:
                     # Para StringVars (radiobuttons)
                     data[key] = widget.get()
                 else:
-                    # Para widgets Entry
+                    # Para widgets Entry y CurrencyEntry
                     data[key] = widget.get()
             
             # Guardar cambios
@@ -636,11 +874,11 @@ class EditWorkWindow:
                 
                 row = 0
                 
-                # Tasa de sellado
+                # Tasa de sellado con formato de moneda
                 ctk.CTkLabel(edit_frame, text="Tasa de Sellado:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
-                sellado_entry = ctk.CTkEntry(edit_frame)
+                sellado_entry = CurrencyEntry(edit_frame)
                 sellado_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
-                sellado_entry.insert(0, self.current_informe["tasa_sellado"] if self.current_informe["tasa_sellado"] else "")
+                sellado_entry.set(self.current_informe["tasa_sellado"] if self.current_informe["tasa_sellado"] else "")
                 self.edit_informe_vars["tasa_sellado"] = sellado_entry
                 row += 1
                 
@@ -733,7 +971,7 @@ class EditWorkWindow:
                     # Para StringVars (radiobuttons)
                     data[key] = widget.get()
                 else:
-                    # Para widgets Entry
+                    # Para widgets Entry y CurrencyEntry
                     data[key] = widget.get()
             
             # Guardar cambios

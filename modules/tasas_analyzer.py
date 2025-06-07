@@ -461,7 +461,7 @@ class TasasAnalyzer:
             
             # Formato para números
             if col in [4, 5, 6, 7, 8] and isinstance(valor, (int, float)) and valor > 0:
-                cell.number_format = '#,##0'
+                cell.number_format = '$#.##0,00'
     
     def _escribir_resumen_totales(self, sheet, start_row, analisis, header_font, header_fill, border):
         """Escribe el resumen de totales en el Excel con formato mejorado"""
@@ -517,7 +517,7 @@ class TasasAnalyzer:
             # Total pagado
             cell = sheet.cell(row=row, column=2, value=total)
             cell.border = border
-            cell.number_format = '$#,##0'
+            cell.number_format = '$#.##0,00'
             cell.font = Font(size=10, bold=True)
             
             # Ingeniero responsable
@@ -562,19 +562,19 @@ class TasasAnalyzer:
             # Total de tasas
             cell = sheet.cell(row=row, column=2, value=datos['total'])
             cell.border = border
-            cell.number_format = '$#,##0'
+            cell.number_format = '$#.##0,00'
             cell.font = Font(size=10, bold=True)
             
             # Para el consejo (30%)
             cell = sheet.cell(row=row, column=3, value=datos['consejo'])
             cell.border = border
-            cell.number_format = '$#,##0'
+            cell.number_format = '$#.##0,00'
             cell.font = Font(size=10)
             
             # Para el ingeniero (70%)
             cell = sheet.cell(row=row, column=4, value=datos['ingeniero'])
             cell.border = border
-            cell.number_format = '$#,##0'
+            cell.number_format = '$#.##0,00'
             cell.font = Font(size=10, bold=True)
             
             # Tipos de visado
@@ -621,7 +621,7 @@ class TasasAnalyzer:
             cell.font = total_font
             cell.fill = total_fill
             cell.border = border
-            cell.number_format = '$#,##0'
+            cell.number_format = '$#.##0,00'
             
             row += 1
         
