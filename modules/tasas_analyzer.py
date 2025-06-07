@@ -464,65 +464,178 @@ class TasasAnalyzer:
                 cell.number_format = '#,##0'
     
     def _escribir_resumen_totales(self, sheet, start_row, analisis, header_font, header_fill, border):
-        """Escribe el resumen de totales en el Excel"""
+        """Escribe el resumen de totales en el Excel con formato mejorado"""
         row = start_row
         
-        # Título del resumen
-        sheet.merge_cells(f'A{row}:F{row}')
+        # Estilos adicionales
+        titulo_fill = PatternFill(start_color="2F5597", end_color="2F5597", fill_type="solid")
+        subtitulo_fill = PatternFill(start_color="D9E2F3", end_color="D9E2F3", fill_type="solid")
+        total_fill = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+        ingeniero_fill = PatternFill(start_color="E2EFDA", end_color="E2EFDA", fill_type="solid")
+        
+        titulo_font = Font(bold=True, size=14, color="FFFFFF")
+        subtitulo_font = Font(bold=True, size=12)
+        total_font = Font(bold=True, size=11)
+        
+        
+        # ============ SECCIÓN 2: TOTALES POR TIPO DE VISADO ============
+        sheet.merge_cells(f'A{row}:H{row}')
         cell = sheet[f'A{row}']
-        cell.value = "RESUMEN DE TOTALES"
-        cell.font = header_font
+        cell.value = "💰 TOTALES POR TIPO DE VISADO (Solo obras pagadas en el período)"
+        cell.font = titulo_font
+        cell.fill = titulo_fill
         cell.alignment = Alignment(horizontal='center')
+        cell.border = border
         row += 2
         
-        # Totales por tipo
-        totales = analisis['totales_pagadas']
-        
-        headers_resumen = ["Tipo de Visado", "Total", "IMLAUER FERNANDO", "ONETTO JOSE", "Consejo (30%)", "Ingenieros (70%)"]
-        for col, header in enumerate(headers_resumen, 1):
+        # Encabezados de la tabla de tipos
+        headers_tipos = ["Tipo de Visado", "Total Pagado", "Ingeniero Responsable"]
+        for col, header in enumerate(headers_tipos, 1):
             cell = sheet.cell(row=row, column=col, value=header)
-            cell.font = header_font
-            cell.fill = header_fill
+            cell.font = subtitulo_font
+            cell.fill = subtitulo_fill
             cell.border = border
+            cell.alignment = Alignment(horizontal='center')
         
         row += 1
         
-        # Datos por tipo
-        tipos_datos = [
-            ("Gas", totales["gas"]["pagado"], "✓", "", ""),
-            ("Salubridad", totales["salubridad"]["pagado"], "✓", "", ""),
-            ("Eléctrica", totales["electrica"]["pagado"], "", "✓", ""),
-            ("Electromecanica", totales["electromecanica"]["pagado"], "", "✓", "")
+        # Datos por tipo de visado
+        totales = analisis['totales_pagadas']
+        tipos_info = [
+            ("Gas", totales["gas"]["pagado"], "IMLAUER FERNANDO"),
+            ("Salubridad", totales["salubridad"]["pagado"], "IMLAUER FERNANDO"),
+            ("Eléctrica", totales["electrica"]["pagado"], "ONETTO JOSE"),
+            ("Electromecanica", totales["electromecanica"]["pagado"], "ONETTO JOSE")
         ]
         
-        for tipo, total, imlauer, onetto, _ in tipos_datos:
-            datos = [tipo, total, imlauer, onetto, "", ""]
-            for col, valor in enumerate(datos, 1):
-                cell = sheet.cell(row=row, column=col, value=valor)
-                cell.border = border
-                if col == 2 and isinstance(valor, (int, float)):
-                    cell.number_format = '#,##0'
+        for tipo, total, ingeniero in tipos_info:
+            # Tipo de visado
+            cell = sheet.cell(row=row, column=1, value=tipo)
+            cell.border = border
+            cell.font = Font(size=10)
+            
+            # Total pagado
+            cell = sheet.cell(row=row, column=2, value=total)
+            cell.border = border
+            cell.number_format = '$#,##0'
+            cell.font = Font(size=10, bold=True)
+            
+            # Ingeniero responsable
+            cell = sheet.cell(row=row, column=3, value=ingeniero)
+            cell.border = border
+            cell.font = Font(size=10)
+            
             row += 1
         
-        # Totales por ingeniero
         row += 1
+        
+        # ============ SECCIÓN 3: CÁLCULO DE HONORARIOS POR INGENIERO ============
+        sheet.merge_cells(f'A{row}:H{row}')
+        cell = sheet[f'A{row}']
+        cell.value = "👷 CÁLCULO DE HONORARIOS POR INGENIERO"
+        cell.font = titulo_font
+        cell.fill = titulo_fill
+        cell.alignment = Alignment(horizontal='center')
+        cell.border = border
+        row += 2
+        
+        # Encabezados de la tabla de ingenieros
+        headers_ingenieros = ["Ingeniero", "Total Tasas", "Para Consejo (30%)", "Para Ingeniero (70%)", "Tipos de Visado"]
+        for col, header in enumerate(headers_ingenieros, 1):
+            cell = sheet.cell(row=row, column=col, value=header)
+            cell.font = subtitulo_font
+            cell.fill = subtitulo_fill
+            cell.border = border
+            cell.alignment = Alignment(horizontal='center')
+        
+        row += 1
+        
+        # Datos por ingeniero
         por_ingeniero = analisis['por_ingeniero']
-        
         for ingeniero, datos in por_ingeniero.items():
-            # Fila del ingeniero
-            sheet.cell(row=row, column=1, value=f"TOTAL {ingeniero}").font = header_font
-            sheet.cell(row=row, column=2, value=datos['total']).number_format = '#,##0'
-            sheet.cell(row=row, column=5, value=datos['consejo']).number_format = '#,##0'
-            sheet.cell(row=row, column=6, value=datos['ingeniero']).number_format = '#,##0'
+            # Nombre del ingeniero
+            cell = sheet.cell(row=row, column=1, value=ingeniero)
+            cell.border = border
+            cell.fill = ingeniero_fill
+            cell.font = Font(size=10, bold=True)
+            
+            # Total de tasas
+            cell = sheet.cell(row=row, column=2, value=datos['total'])
+            cell.border = border
+            cell.number_format = '$#,##0'
+            cell.font = Font(size=10, bold=True)
+            
+            # Para el consejo (30%)
+            cell = sheet.cell(row=row, column=3, value=datos['consejo'])
+            cell.border = border
+            cell.number_format = '$#,##0'
+            cell.font = Font(size=10)
+            
+            # Para el ingeniero (70%)
+            cell = sheet.cell(row=row, column=4, value=datos['ingeniero'])
+            cell.border = border
+            cell.number_format = '$#,##0'
+            cell.font = Font(size=10, bold=True)
+            
+            # Tipos de visado
+            tipos_str = ', '.join([t.title() for t in datos['tipos']])
+            cell = sheet.cell(row=row, column=5, value=tipos_str)
+            cell.border = border
+            cell.font = Font(size=9)
+            
             row += 1
         
-        # Total general
         row += 1
+        
+        # ============ SECCIÓN 4: TOTALES GENERALES ============
+        sheet.merge_cells(f'A{row}:H{row}')
+        cell = sheet[f'A{row}']
+        cell.value = "🏛️ TOTALES GENERALES"
+        cell.font = titulo_font
+        cell.fill = titulo_fill
+        cell.alignment = Alignment(horizontal='center')
+        cell.border = border
+        row += 2
+        
+        # Calcular totales generales
         total_general = sum(d['total'] for d in por_ingeniero.values())
         total_consejo = sum(d['consejo'] for d in por_ingeniero.values())
         total_ingenieros = sum(d['ingeniero'] for d in por_ingeniero.values())
         
-        sheet.cell(row=row, column=1, value="TOTAL GENERAL").font = header_font
-        sheet.cell(row=row, column=2, value=total_general).number_format = '#,##0'
-        sheet.cell(row=row, column=5, value=total_consejo).number_format = '#,##0'
-        sheet.cell(row=row, column=6, value=total_ingenieros).number_format = '#,##0'
+        # Tabla de totales generales
+        totales_generales_data = [
+            ("Total de todas las tasas:", total_general),
+            ("Total para el Consejo (30%):", total_consejo),
+            ("Total para Ingenieros (70%):", total_ingenieros)
+        ]
+        
+        for label, value in totales_generales_data:
+            # Label
+            cell = sheet.cell(row=row, column=1, value=label)
+            cell.font = total_font
+            cell.fill = total_fill
+            cell.border = border
+            
+            # Value
+            cell = sheet.cell(row=row, column=2, value=value)
+            cell.font = total_font
+            cell.fill = total_fill
+            cell.border = border
+            cell.number_format = '$#,##0'
+            
+            row += 1
+        
+        # Ajustar ancho de columnas para mejor visualización
+        column_widths = {
+            'A': 25,  # Ingeniero/Tipo
+            'B': 15,  # Total Tasas
+            'C': 18,  # Para Consejo
+            'D': 18,  # Para Ingeniero
+            'E': 20,  # Tipos de Visado
+            'F': 15,
+            'G': 15,
+            'H': 15
+        }
+        
+        for col, width in column_widths.items():
+            sheet.column_dimensions[col].width = width
