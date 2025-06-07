@@ -40,6 +40,20 @@ class TasasAnalysisWindow:
             text_color="gray"
         )
         subtitle.pack(pady=(0, 20))
+
+        # BOTÓN DE SALIDA - CENTRADO Y CON COLORES DEL PROGRAMA
+        exit_button_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        exit_button_frame.pack(fill="x", padx=10, pady=5)
+
+        btn_exit_top = ctk.CTkButton(
+            exit_button_frame,
+            text="🏠 Volver al Menú Principal",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            command=self.return_callback,
+            height=30,
+            width=200
+        )
+        btn_exit_top.pack(anchor="center", pady=5)
         
         # Frame de configuración
         config_frame = ctk.CTkFrame(main_frame)
@@ -203,14 +217,6 @@ class TasasAnalysisWindow:
         )
         initial_label.pack(pady=50)
         
-        # Botón para volver al menú principal
-        btn_back = ctk.CTkButton(
-            main_frame, 
-            text="🏠 Volver al Menú Principal", 
-            font=ctk.CTkFont(size=14),
-            command=self.return_callback
-        )
-        btn_back.pack(pady=10)
     
     def set_mes_actual(self):
         """Configura las fechas para el mes actual"""
