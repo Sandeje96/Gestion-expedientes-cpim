@@ -431,6 +431,22 @@ class TasasAnalyzer:
         except Exception as e:
             print(f"Error al exportar a Excel: {e}")
             return None
+        
+    def _auto_ajustar_columnas(self, sheet):
+        """Ajusta automáticamente el ancho de todas las columnas basándose en el contenido"""
+        for col in sheet.columns:  # ← Esto itera por TODAS las columnas
+            max_length = 0
+            column = col[0].column_letter
+            
+            for cell in col:  # ← Revisa TODAS las celdas de cada columna
+                if cell.value:
+                    cell_length = len(str(cell.value))  # ← Cualquier tipo de contenido
+                    if cell_length > max_length:
+                        max_length = cell_length
+            
+            # Ajusta CUALQUIER columna basándose en su contenido más largo
+            adjusted_width = min(max(max_length + 2, 10), 50)
+            sheet.column_dimensions[column].width = adjusted_width
     
     def _escribir_fila_obra(self, sheet, row, obra, border):
         """Escribe una fila de obra en el Excel"""
