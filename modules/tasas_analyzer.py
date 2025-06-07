@@ -459,9 +459,12 @@ class TasasAnalyzer:
             cell = sheet.cell(row=row, column=col, value=valor)
             cell.border = border
             
-            # Formato para números
+            # Formato para números - FORMATO CORREGIDO
             if col in [4, 5, 6, 7, 8] and isinstance(valor, (int, float)) and valor > 0:
-                cell.number_format = '$#.##0,00'
+                cell.number_format = '"$"#,##0.00'  # ← CAMBIO AQUÍ: formato argentino
+
+
+    # También reemplaza el método _escribir_resumen_totales para corregir otros formatos
     
     def _escribir_resumen_totales(self, sheet, start_row, analisis, header_font, header_fill, border):
         """Escribe el resumen de totales en el Excel con formato mejorado"""
@@ -514,10 +517,10 @@ class TasasAnalyzer:
             cell.border = border
             cell.font = Font(size=10)
             
-            # Total pagado
+            # Total pagado - FORMATO CORREGIDO
             cell = sheet.cell(row=row, column=2, value=total)
             cell.border = border
-            cell.number_format = '$#.##0,00'
+            cell.number_format = '"$"#,##0.00'  # ← CAMBIO AQUÍ
             cell.font = Font(size=10, bold=True)
             
             # Ingeniero responsable
@@ -559,22 +562,22 @@ class TasasAnalyzer:
             cell.fill = ingeniero_fill
             cell.font = Font(size=10, bold=True)
             
-            # Total de tasas
+            # Total de tasas - FORMATO CORREGIDO
             cell = sheet.cell(row=row, column=2, value=datos['total'])
             cell.border = border
-            cell.number_format = '$#.##0,00'
+            cell.number_format = '"$"#,##0.00'  # ← CAMBIO AQUÍ
             cell.font = Font(size=10, bold=True)
             
-            # Para el consejo (30%)
+            # Para el consejo (30%) - FORMATO CORREGIDO
             cell = sheet.cell(row=row, column=3, value=datos['consejo'])
             cell.border = border
-            cell.number_format = '$#.##0,00'
+            cell.number_format = '"$"#,##0.00'  # ← CAMBIO AQUÍ
             cell.font = Font(size=10)
             
-            # Para el ingeniero (70%)
+            # Para el ingeniero (70%) - FORMATO CORREGIDO
             cell = sheet.cell(row=row, column=4, value=datos['ingeniero'])
             cell.border = border
-            cell.number_format = '$#.##0,00'
+            cell.number_format = '"$"#,##0.00'  # ← CAMBIO AQUÍ
             cell.font = Font(size=10, bold=True)
             
             # Tipos de visado
@@ -616,12 +619,12 @@ class TasasAnalyzer:
             cell.fill = total_fill
             cell.border = border
             
-            # Value
+            # Value - FORMATO CORREGIDO
             cell = sheet.cell(row=row, column=2, value=value)
             cell.font = total_font
             cell.fill = total_fill
             cell.border = border
-            cell.number_format = '$#.##0,00'
+            cell.number_format = '"$"#,##0.00'  # ← CAMBIO AQUÍ
             
             row += 1
         
