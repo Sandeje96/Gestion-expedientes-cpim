@@ -9,6 +9,48 @@ class DataManager:
         print(f"Usando archivo Excel: {self.excel_file.absolute()}")
         self._ensure_excel_exists()
 
+    def _apply_currency_format(self, cell, value):
+        """
+        Aplica formato de moneda a una celda y establece el valor
+        
+        Args:
+            cell: La celda de openpyxl
+            value: El valor a establecer (puede ser string con formato o número)
+        """
+        try:
+            # Si el valor está vacío o es None, no hacer nada
+            if not value or value == "":
+                cell.value = ""
+                return
+                
+            # Si es string, intentar extraer el número
+            if isinstance(value, str):
+                # Remover símbolos de moneda y espacios
+                clean_value = value.replace("$", "").replace(".", "").replace(",", ".").replace(" ", "")
+                if clean_value:
+                    try:
+                        numeric_value = float(clean_value)
+                    except ValueError:
+                        # Si no se puede convertir, guardar como string
+                        cell.value = value
+                        return
+                else:
+                    cell.value = ""
+                    return
+            else:
+                numeric_value = float(value)
+            
+            # Establecer el valor numérico
+            cell.value = numeric_value
+            
+            # Aplicar formato de moneda argentino
+            cell.number_format = '"$"#,##0.00'
+            
+        except Exception as e:
+            print(f"Error al aplicar formato de moneda: {e}")
+            # En caso de error, guardar el valor original
+            cell.value = value
+
     def clean_data(self, data):
         """
         Limpia los datos eliminando espacios en blanco innecesarios
@@ -356,9 +398,15 @@ class DataManager:
                 27: data.get("analizada_en_periodo", "")
             }
             
-            # Insertar datos en la hoja
+            # Insertar datos en la hoja con formato especial para monedas
             for col, value in columns.items():
-                sheet.cell(row=next_row, column=col, value=value)
+                cell = sheet.cell(row=next_row, column=col)
+                
+                # Aplicar formato de moneda para campos monetarios
+                if col in [12, 13, 14, 15, 16, 17]:  # Tasas y visados
+                    self._apply_currency_format(cell, value)
+                else:
+                    cell.value = value
             
             workbook.save(str(self.excel_file))
             print(f"Obra agregada en fila {next_row}")
@@ -413,9 +461,15 @@ class DataManager:
                 17: data.get("whatsapp_tramitador", "")
             }
             
-            # Insertar datos en la hoja
+            # Insertar datos en la hoja con formato especial para monedas
             for col, value in columns.items():
-                sheet.cell(row=next_row, column=col, value=value)
+                cell = sheet.cell(row=next_row, column=col)
+                
+                # Aplicar formato de moneda para tasa de sellado
+                if col == 9:  # Tasa de sellado
+                    self._apply_currency_format(cell, value)
+                else:
+                    cell.value = value
             
             workbook.save(str(self.excel_file))
             print(f"Informe agregado en fila {next_row}")
@@ -612,17 +666,17 @@ class DataManager:
             # Actualizar solo los campos proporcionados
             for key, value in data.items():
                 if key == "tasa_sellado":
-                    sheet.cell(row=row, column=12, value=value)
+                    self._apply_currency_format(sheet.cell(row=row, column=12), value)
                 elif key == "tasa_visado":
-                    sheet.cell(row=row, column=13, value=value)
+                    self._apply_currency_format(sheet.cell(row=row, column=13), value)
                 elif key == "visado_gas":
-                    sheet.cell(row=row, column=14, value=value)
+                    self._apply_currency_format(sheet.cell(row=row, column=14), value)
                 elif key == "visado_salubridad":
-                    sheet.cell(row=row, column=15, value=value)
+                    self._apply_currency_format(sheet.cell(row=row, column=15), value)
                 elif key == "visado_electrica":
-                    sheet.cell(row=row, column=16, value=value)
+                    self._apply_currency_format(sheet.cell(row=row, column=16), value)
                 elif key == "visado_electromecanica":
-                    sheet.cell(row=row, column=17, value=value)
+                    self._apply_currency_format(sheet.cell(row=row, column=17), value)
                 elif key == "estado_pago_sellado":
                     sheet.cell(row=row, column=18, value=value)
                 elif key == "estado_pago_visado":
@@ -739,17 +793,17 @@ class DataManager:
             # Actualizar solo los campos proporcionados (igual que en update_obra_general)
             for key, value in data.items():
                 if key == "tasa_sellado":
-                    sheet.cell(row=row, column=12, value=value)
+                    self._apply_currency_format(sheet.cell(row=row, column=12), value)
                 elif key == "tasa_visado":
-                    sheet.cell(row=row, column=13, value=value)
+                    self._apply_currency_format(sheet.cell(row=row, column=13), value)
                 elif key == "visado_gas":
-                    sheet.cell(row=row, column=14, value=value)
+                    self._apply_currency_format(sheet.cell(row=row, column=14), value)
                 elif key == "visado_salubridad":
-                    sheet.cell(row=row, column=15, value=value)
+                    self._apply_currency_format(sheet.cell(row=row, column=15), value)
                 elif key == "visado_electrica":
-                    sheet.cell(row=row, column=16, value=value)
+                    self._apply_currency_format(sheet.cell(row=row, column=16), value)
                 elif key == "visado_electromecanica":
-                    sheet.cell(row=row, column=17, value=value)
+                    self._apply_currency_format(sheet.cell(row=row, column=17), value)
                 elif key == "estado_pago_sellado":
                     sheet.cell(row=row, column=18, value=value)
                 elif key == "estado_pago_visado":
@@ -797,7 +851,7 @@ class DataManager:
             # Actualizar solo los campos proporcionados
             for key, value in data.items():
                 if key == "tasa_sellado":
-                    sheet.cell(row=row, column=9, value=value)
+                    self._apply_currency_format(sheet.cell(row=row, column=9), value)
                 elif key == "estado_pago":
                     sheet.cell(row=row, column=10, value=value)
                 elif key == "nro_expediente_cpim":
