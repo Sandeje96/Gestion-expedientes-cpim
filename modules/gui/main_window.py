@@ -9,6 +9,7 @@ from .new_record_window import NewRecordWindow
 from .edit_work_window import EditWorkWindow
 from .duplicate_work_window import DuplicateWorkWindow
 from .generate_word_window import GenerateWordWindow
+from .tasas_analysis_window import TasasAnalysisWindow
 
 
 class App(ctk.CTk):
@@ -121,6 +122,16 @@ class App(ctk.CTk):
             command=lambda: self.file_manager.open_folder(TRABAJOS_PATH)
         )
         btn_folder.grid(row=2, column=0, columnspan=2, padx=20, pady=20, sticky="nsew")
+
+        btn_tasas = ctk.CTkButton(
+            btn_frame, 
+            text="📊 Análisis de Tasas de Visado", 
+            font=ctk.CTkFont(size=16),
+            height=80,
+            command=self.show_tasas_analysis_window
+        )
+        btn_tasas.grid(row=3, column=0, columnspan=2, padx=20, pady=20, sticky="nsew")
+
         
         # Frame para información adicional
         info_frame = ctk.CTkFrame(main_frame)
@@ -191,3 +202,14 @@ class App(ctk.CTk):
             self.word_generator,
             self.create_main_menu
         )
+        
+    def show_tasas_analysis_window(self):
+        """Muestra la ventana de análisis de tasas de visado"""
+        self.clear_window()
+        self.current_window = TasasAnalysisWindow(
+            self, 
+            self.data_manager, 
+            self.create_main_menu
+        )
+
+    

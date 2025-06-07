@@ -56,21 +56,27 @@ class DataManager:
                             "Visado de instalacion electrica", "Visado de instalacion electromecanica",
                             "Estado pago sellado", "Estado pago visado",
                             "Nro de expediente CPIM", "Fecha de salida", "Persona que retira", 
-                            "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
+                            "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador", 
+                            "Analizada en Periodo"
                         ]
                         for idx, header in enumerate(headers_obras, 1):
                             cell = obras_sheet.cell(row=1, column=idx, value=header)
                             cell.font = Font(bold=True)
                         necesita_guardar = True
                     else:
-                        # Verificar si ya tiene las columnas de WhatsApp
+                        # Verificar si ya tiene todas las columnas
                         obras_sheet = workbook["Obras en general"]
-                        if obras_sheet.max_column < 26:  # Si no tiene todas las columnas
-                            # Agregar columnas de WhatsApp
-                            obras_sheet.cell(row=1, column=25, value="WhatsApp Profesional")
-                            obras_sheet.cell(row=1, column=26, value="WhatsApp Tramitador")
-                            obras_sheet.cell(row=1, column=25).font = Font(bold=True)
-                            obras_sheet.cell(row=1, column=26).font = Font(bold=True)
+                        if obras_sheet.max_column < 27:  # Si no tiene todas las columnas
+                            # Agregar columnas faltantes
+                            if obras_sheet.max_column < 25:
+                                obras_sheet.cell(row=1, column=25, value="WhatsApp Profesional")
+                                obras_sheet.cell(row=1, column=25).font = Font(bold=True)
+                            if obras_sheet.max_column < 26:
+                                obras_sheet.cell(row=1, column=26, value="WhatsApp Tramitador")
+                                obras_sheet.cell(row=1, column=26).font = Font(bold=True)
+                            if obras_sheet.max_column < 27:
+                                obras_sheet.cell(row=1, column=27, value="Analizada en Periodo")
+                                obras_sheet.cell(row=1, column=27).font = Font(bold=True)
                             necesita_guardar = True
                     
                     if "Informes técnicos" not in workbook.sheetnames:
@@ -130,7 +136,8 @@ class DataManager:
                 "Visado de instalacion electrica", "Visado de instalacion electromecanica",
                 "Estado pago sellado", "Estado pago visado",
                 "Nro de expediente CPIM", "Fecha de salida", "Persona que retira", 
-                "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
+                "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador", 
+                "Analizada en Periodo"
             ]
             
             # Configurar encabezados para Informes técnicos
@@ -160,34 +167,7 @@ class DataManager:
             # Si todo lo demás falla, intentamos con otro nombre
             self.excel_file = Path("datos_cpim.xlsx")
             self._create_basic_excel()
-            
-    def get_all_profesionales(self):
-        """Obtiene la lista de todos los profesionales registrados"""
-        try:
-            workbook = openpyxl.load_workbook(str(self.excel_file))
-            profesionales = set()
-            
-            # Buscar en la hoja "Obras en general"
-            if "Obras en general" in workbook.sheetnames:
-                sheet = workbook["Obras en general"]
-                for row in range(2, sheet.max_row + 1):
-                    profesional = sheet.cell(row=row, column=6).value
-                    if profesional:
-                        profesionales.add(profesional)
-            
-            # Buscar en la hoja "Informes técnicos"
-            if "Informes técnicos" in workbook.sheetnames:
-                sheet = workbook["Informes técnicos"]
-                for row in range(2, sheet.max_row + 1):
-                    profesional = sheet.cell(row=row, column=7).value
-                    if profesional:
-                        profesionales.add(profesional)
-            
-            return sorted(list(profesionales))
-        except Exception as e:
-            print(f"Error al obtener profesionales: {e}")
-            return []
-        
+
     def get_whatsapp_by_profesional(self, nombre_profesional):
         """Obtiene el número de WhatsApp asociado a un profesional"""
         try:
@@ -217,7 +197,7 @@ class DataManager:
         except Exception as e:
             print(f"Error al obtener WhatsApp del profesional: {e}")
             return None
-        
+
     def get_profesionales_with_whatsapp(self):
         """Obtiene un diccionario de profesionales con sus números de WhatsApp"""
         try:
@@ -246,6 +226,33 @@ class DataManager:
         except Exception as e:
             print(f"Error al obtener profesionales con WhatsApp: {e}")
             return {}
+            
+    def get_all_profesionales(self):
+        """Obtiene la lista de todos los profesionales registrados"""
+        try:
+            workbook = openpyxl.load_workbook(str(self.excel_file))
+            profesionales = set()
+            
+            # Buscar en la hoja "Obras en general"
+            if "Obras en general" in workbook.sheetnames:
+                sheet = workbook["Obras en general"]
+                for row in range(2, sheet.max_row + 1):
+                    profesional = sheet.cell(row=row, column=6).value
+                    if profesional:
+                        profesionales.add(profesional)
+            
+            # Buscar en la hoja "Informes técnicos"
+            if "Informes técnicos" in workbook.sheetnames:
+                sheet = workbook["Informes técnicos"]
+                for row in range(2, sheet.max_row + 1):
+                    profesional = sheet.cell(row=row, column=7).value
+                    if profesional:
+                        profesionales.add(profesional)
+            
+            return sorted(list(profesionales))
+        except Exception as e:
+            print(f"Error al obtener profesionales: {e}")
+            return []
 
     def get_all_comitentes(self):
         """Obtiene la lista de todos los comitentes registrados"""
@@ -306,7 +313,8 @@ class DataManager:
                     "Visado de instalacion electrica", "Visado de instalacion electromecanica",
                     "Estado pago sellado", "Estado pago visado",
                     "Nro de expediente CPIM", "Fecha de salida", "Persona que retira", 
-                    "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
+                    "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador", 
+                    "Analizada en Periodo"
                 ]
                 for idx, header in enumerate(headers, 1):
                     cell = sheet.cell(row=1, column=idx, value=header)
@@ -344,7 +352,8 @@ class DataManager:
                 23: data.get("nro_caja", ""),
                 24: data.get("ruta_carpeta", ""),
                 25: data.get("whatsapp_profesional", ""),
-                26: data.get("whatsapp_tramitador", "")
+                26: data.get("whatsapp_tramitador", ""),
+                27: data.get("analizada_en_periodo", "")
             }
             
             # Insertar datos en la hoja
@@ -439,7 +448,8 @@ class DataManager:
                         "Visado de instalacion electrica", "Visado de instalacion electromecanica",
                         "Estado pago sellado", "Estado pago visado",
                         "Nro de expediente CPIM", "Fecha de salida", "Persona que retira", 
-                        "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador"
+                        "Nro de Caja", "Ruta de carpeta", "WhatsApp Profesional", "WhatsApp Tramitador", 
+                        "Analizada en Periodo"
                     ]
                 else:
                     headers = [
@@ -544,7 +554,8 @@ class DataManager:
                     "nro_caja": sheet.cell(row=row, column=23).value,
                     "ruta_carpeta": sheet.cell(row=row, column=24).value,
                     "whatsapp_profesional": sheet.cell(row=row, column=25).value,
-                    "whatsapp_tramitador": sheet.cell(row=row, column=26).value
+                    "whatsapp_tramitador": sheet.cell(row=row, column=26).value,
+                    "analizada_en_periodo": sheet.cell(row=row, column=27).value
                 }
             else:
                 work = {
@@ -628,6 +639,8 @@ class DataManager:
                     sheet.cell(row=row, column=25, value=value)
                 elif key == "whatsapp_tramitador":
                     sheet.cell(row=row, column=26, value=value)
+                elif key == "analizada_en_periodo":
+                    sheet.cell(row=row, column=27, value=value)
             
             # Guardar el archivo con los cambios
             workbook.save(str(self.excel_file))
@@ -753,6 +766,8 @@ class DataManager:
                     sheet.cell(row=row, column=25, value=value)
                 elif key == "whatsapp_tramitador":
                     sheet.cell(row=row, column=26, value=value)
+                elif key == "analizada_en_periodo":
+                    sheet.cell(row=row, column=27, value=value)
             
             workbook.save(str(self.excel_file))
             print(f"Trabajo similar actualizado en fila {row}")
