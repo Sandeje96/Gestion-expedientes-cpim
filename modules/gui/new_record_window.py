@@ -53,6 +53,10 @@ class NewRecordWindow:
         )
         btn_back.pack(pady=10)
     
+    def validate_length(self, text, max_length):
+        """Valida que el texto no exceda la longitud máxima"""
+        return len(text) <= max_length
+    
     def setup_obra_tab(self, parent):
         """Configura los widgets para la pestaña de Obra en general"""
         # Crear frame de scroll
@@ -144,20 +148,36 @@ class NewRecordWindow:
         ctk.CTkOptionMenu(scroll_frame, values=TIPOS_OBRA, variable=self.obra_vars["tipo_trabajo"]).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         row += 1
         
-        # Nombre del profesional (con autocompletado)
+        # Nombre del profesional (con autocompletado y límite de caracteres)
         ctk.CTkLabel(scroll_frame, text="Nombre del Profesional:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
         self.prof_entry = AutocompleteEntry(scroll_frame, options=profesionales)
         # Configurar callback para autocompletar WhatsApp cuando cambie el profesional
         self.prof_entry.entry_var.trace_add("write", self.on_profesional_change_obra)
+        
+        # APLICAR LÍMITE DE 50 CARACTERES AL PROFESIONAL
+        validate_prof_cmd = (self.parent.register(lambda text: self.validate_length(text, 50)), '%P')
+        self.prof_entry.entry.configure(validate='key', validatecommand=validate_prof_cmd)
+        
         self.prof_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         self.obra_vars["nombre_profesional"] = self.prof_entry
+        
+        # Label informativo para profesional
+        ctk.CTkLabel(scroll_frame, text="(máx. 50 caracteres)", font=("Arial", 8), text_color="gray").grid(row=row, column=2, sticky="w", padx=5)
         row += 1
         
-        # Nombre del comitente (con autocompletado)
+        # Nombre del comitente (con autocompletado y límite de caracteres)
         ctk.CTkLabel(scroll_frame, text="Nombre del Comitente:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
         self.comit_entry = AutocompleteEntry(scroll_frame, options=comitentes)
+        
+        # APLICAR LÍMITE DE 80 CARACTERES AL COMITENTE
+        validate_comit_cmd = (self.parent.register(lambda text: self.validate_length(text, 50)), '%P')
+        self.comit_entry.entry.configure(validate='key', validatecommand=validate_comit_cmd)
+        
         self.comit_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         self.obra_vars["nombre_comitente"] = self.comit_entry
+        
+        # Label informativo para comitente
+        ctk.CTkLabel(scroll_frame, text="(usa - para separar muchos comitentes)", font=("Arial", 8), text_color="gray").grid(row=row, column=2, sticky="w", padx=5)
         row += 1
         
         # Ubicación
@@ -343,20 +363,36 @@ class NewRecordWindow:
         ctk.CTkEntry(scroll_frame, textvariable=self.informe_vars["detalle"]).grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         row += 1
         
-        # Profesional (con autocompletado)
+        # Profesional (con autocompletado y límite de caracteres)
         ctk.CTkLabel(scroll_frame, text="Profesional:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
         self.informe_prof_entry = AutocompleteEntry(scroll_frame, options=profesionales)
         # Configurar callback para autocompletar WhatsApp cuando cambie el profesional
         self.informe_prof_entry.entry_var.trace_add("write", self.on_profesional_change_informe)
+        
+        # APLICAR LÍMITE DE 50 CARACTERES AL PROFESIONAL
+        validate_inf_prof_cmd = (self.parent.register(lambda text: self.validate_length(text, 50)), '%P')
+        self.informe_prof_entry.entry.configure(validate='key', validatecommand=validate_inf_prof_cmd)
+        
         self.informe_prof_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         self.informe_vars["profesional"] = self.informe_prof_entry
+        
+        # Label informativo para profesional
+        ctk.CTkLabel(scroll_frame, text="(máx. 50 caracteres)", font=("Arial", 8), text_color="gray").grid(row=row, column=2, sticky="w", padx=5)
         row += 1
         
-        # Comitente (con autocompletado)
+        # Comitente (con autocompletado y límite de caracteres)
         ctk.CTkLabel(scroll_frame, text="Comitente:").grid(row=row, column=0, sticky="w", pady=5, padx=5)
         self.informe_comit_entry = AutocompleteEntry(scroll_frame, options=comitentes)
+        
+        # APLICAR LÍMITE DE 80 CARACTERES AL COMITENTE
+        validate_inf_comit_cmd = (self.parent.register(lambda text: self.validate_length(text, 50)), '%P')
+        self.informe_comit_entry.entry.configure(validate='key', validatecommand=validate_inf_comit_cmd)
+        
         self.informe_comit_entry.grid(row=row, column=1, sticky="ew", pady=5, padx=5)
         self.informe_vars["comitente"] = self.informe_comit_entry
+        
+        # Label informativo para comitente
+        ctk.CTkLabel(scroll_frame, text="(usa - para separar muchos comitentes)", font=("Arial", 8), text_color="gray").grid(row=row, column=2, sticky="w", padx=5)
         row += 1
         
         # Tasa de sellado
@@ -456,6 +492,39 @@ class NewRecordWindow:
     
     def add_files_to_list(self):
         """Añade archivos a la lista de archivos seleccionados"""
+        filetypes = [
+            ("Documentos", "*.pdf;*.doc;*.docx"),
+            ("Archivos PDF", "*.pdf"),
+            ("Documentos Word", "*.doc;*.docx"),
+            ("Todos los archivos", "*.*")
+        ]
+        
+        # Abrir diálogo para seleccionar archivos
+        files = filedialog.askopenfilenames(
+            title="Seleccionar archivos",
+            filetypes=filetypes
+        )
+        
+        if files:
+            # Añadir archivos a la lista
+            for file in files:
+                if file not in self.selected_files:
+                    self.selected_files.append(file)
+                    # Mostrar solo el nombre del archivo en la lista
+                    self.files_listbox.insert(tk.END, os.path.basename(file))
+
+    def remove_selected_file(self):
+        """Elimina el archivo seleccionado de la lista"""
+        selected_indices = self.files_listbox.curselection()
+        
+        if selected_indices:
+            # Eliminar archivo seleccionado (de mayor a menor índice para evitar problemas)
+            for index in sorted(selected_indices, reverse=True):
+                del self.selected_files[index]
+                self.files_listbox.delete(index)
+
+    def add_files_to_informe_list(self):
+        """Añade archivos a la lista de archivos seleccionados para informes"""
         filetypes = [
             ("Documentos", "*.pdf;*.doc;*.docx"),
             ("Archivos PDF", "*.pdf"),
@@ -609,7 +678,6 @@ class NewRecordWindow:
                     except Exception as e:
                         messagebox.showerror("Error", f"No se pudo copiar el archivo {file_name}: {str(e)}")
 
-
         # Guardar en el Excel
         row_id = self.data_manager.add_informe_tecnico(data)
         
@@ -687,62 +755,6 @@ class NewRecordWindow:
         except Exception as e:
             messagebox.showerror("Error", f"No se pudieron copiar todos los datos: {str(e)}")
 
-    def add_files_to_list(self):
-        """Añade archivos a la lista de archivos seleccionados"""
-        filetypes = [
-            ("Documentos", "*.pdf;*.doc;*.docx"),
-            ("Archivos PDF", "*.pdf"),
-            ("Documentos Word", "*.doc;*.docx"),
-            ("Todos los archivos", "*.*")
-        ]
-        
-        # Abrir diálogo para seleccionar archivos
-        files = filedialog.askopenfilenames(
-            title="Seleccionar archivos",
-            filetypes=filetypes
-        )
-        
-        if files:
-            # Añadir archivos a la lista
-            for file in files:
-                if file not in self.selected_files:
-                    self.selected_files.append(file)
-                    # Mostrar solo el nombre del archivo en la lista
-                    self.files_listbox.insert(tk.END, os.path.basename(file))
-
-    def remove_selected_file(self):
-        """Elimina el archivo seleccionado de la lista"""
-        selected_indices = self.files_listbox.curselection()
-        
-        if selected_indices:
-            # Eliminar archivo seleccionado (de mayor a menor índice para evitar problemas)
-            for index in sorted(selected_indices, reverse=True):
-                del self.selected_files[index]
-                self.files_listbox.delete(index)
-
-    def add_files_to_informe_list(self):
-        """Añade archivos a la lista de archivos seleccionados para informes"""
-        filetypes = [
-            ("Documentos", "*.pdf;*.doc;*.docx"),
-            ("Archivos PDF", "*.pdf"),
-            ("Documentos Word", "*.doc;*.docx"),
-            ("Todos los archivos", "*.*")
-        ]
-        
-        # Abrir diálogo para seleccionar archivos
-        files = filedialog.askopenfilenames(
-            title="Seleccionar archivos",
-            filetypes=filetypes
-        )
-        
-        if files:
-            # Añadir archivos a la lista
-            for file in files:
-                if file not in self.informe_selected_files:
-                    self.informe_selected_files.append(file)
-                    # Mostrar solo el nombre del archivo en la lista
-                    self.informe_files_listbox.insert(tk.END, os.path.basename(file))
-
     def on_profesional_change_obra(self, *args):
         """Se ejecuta cuando cambia el nombre del profesional en obras"""
         try:
@@ -768,6 +780,3 @@ class NewRecordWindow:
                     self.informe_vars["whatsapp_profesional"].set(whatsapp)
         except Exception as e:
             print(f"Error al autocompletar WhatsApp en informe: {e}")
-        
-
-        
