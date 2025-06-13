@@ -8,6 +8,16 @@ class DataManager:
         self.excel_file = Path("registros.xlsx")
         print(f"Usando archivo Excel: {self.excel_file.absolute()}")
         self._ensure_excel_exists()
+        
+        # AGREGAR ESTAS LÍNEAS PARA CACHE:
+        self._obras_cache = None
+        self._informes_cache = None
+        self._cache_timestamp = None
+        self._profesionales_cache = None
+        self._comitentes_cache = None
+        self.excel_file = Path("registros.xlsx")
+        print(f"Usando archivo Excel: {self.excel_file.absolute()}")
+        self._ensure_excel_exists()
 
     def _apply_currency_format(self, cell, value):
         """
@@ -422,6 +432,7 @@ class DataManager:
             
             workbook.save(str(self.excel_file))
             print(f"Obra agregada en fila {next_row}")
+            self._invalidate_cache()
             return next_row - 1  # Retorna el índice del registro (0-based)
         except Exception as e:
             print(f"Error al agregar obra: {e}")
@@ -711,6 +722,7 @@ class DataManager:
             # Guardar el archivo con los cambios
             workbook.save(str(self.excel_file))
             print(f"Obra actualizada en fila {row}")
+            self._invalidate_cache()
             
             # Si se está actualizando datos de salida, buscar y actualizar otros trabajos similares
             if es_actualizacion_salida and obra_actual:
@@ -915,3 +927,83 @@ class DataManager:
         except Exception as e:
             print(f"Error al obtener número de caja: {e}")
             return 1  # Retorna 1 en caso de error (comenzar desde 1)
+        
+    def _invalidate_cache(self):
+        """Invalida el cache cuando se hacen cambios"""
+        self._obras_cache = None
+        self._informes_cache = None
+        self._profesionales_cache = None
+        self._comitentes_cache = None
+        self._cache_timestamp = None
+
+    def _get_cached_obras(self):
+        """Obtiene obras del cache o las carga si es necesario"""
+        import os
+        from datetime import datetime
+        
+        try:
+            # Verificar si el archivo fue modificado
+            file_mtime = os.path.getmtime(self.excel_file)
+            
+            if (self._obras_cache is None or 
+                self._cache_timestamp is None or 
+                file_mtime > self._cache_timestamp):
+                
+                print("Cargando obras al cache...")
+                self._obras_cache = self._load_all_obras_detailed()
+                self._cache_timestamp = file_mtime
+                print(f"Cache actualizado con {len(self._obras_cache)} obras")
+            
+            return self._obras_cache
+        except Exception as e:
+            print(f"Error en cache, cargando directamente: {e}")
+            return self._load_all_obras_detailed()
+
+    def _load_all_obras_detailed(self):
+        """Carga todas las obras con detalles completos"""
+        try:
+            workbook = openpyxl.load_workbook(str(self.excel_file))
+            
+            if "Obras en general" not in workbook.sheetnames:
+                return []
+            
+            sheet = workbook["Obras en general"]
+            obras_detailed = []
+            
+            for row in range(2, sheet.max_row + 1):
+                obra = {
+                    "id": row - 1,
+                    "fecha": sheet.cell(row=row, column=1).value,
+                    "profesion": sheet.cell(row=row, column=2).value,
+                    "formato": sheet.cell(row=row, column=3).value,
+                    "nro_copias": sheet.cell(row=row, column=4).value,
+                    "tipo_trabajo": sheet.cell(row=row, column=5).value,
+                    "nombre_profesional": sheet.cell(row=row, column=6).value,
+                    "nombre_comitente": sheet.cell(row=row, column=7).value,
+                    "ubicacion": sheet.cell(row=row, column=8).value,
+                    "nro_expte_municipal": sheet.cell(row=row, column=9).value,
+                    "nro_sistema_gop": sheet.cell(row=row, column=10).value,
+                    "nro_partida_inmobiliaria": sheet.cell(row=row, column=11).value,
+                    "tasa_sellado": sheet.cell(row=row, column=12).value,
+                    "tasa_visado": sheet.cell(row=row, column=13).value,
+                    "visado_gas": sheet.cell(row=row, column=14).value,
+                    "visado_salubridad": sheet.cell(row=row, column=15).value,
+                    "visado_electrica": sheet.cell(row=row, column=16).value,
+                    "visado_electromecanica": sheet.cell(row=row, column=17).value,
+                    "estado_pago_sellado": sheet.cell(row=row, column=18).value,
+                    "estado_pago_visado": sheet.cell(row=row, column=19).value,
+                    "nro_expediente_cpim": sheet.cell(row=row, column=20).value,
+                    "fecha_salida": sheet.cell(row=row, column=21).value,
+                    "persona_retira": sheet.cell(row=row, column=22).value,
+                    "nro_caja": sheet.cell(row=row, column=23).value,
+                    "ruta_carpeta": sheet.cell(row=row, column=24).value,
+                    "whatsapp_profesional": sheet.cell(row=row, column=25).value,
+                    "whatsapp_tramitador": sheet.cell(row=row, column=26).value,
+                    "analizada_en_periodo": sheet.cell(row=row, column=27).value
+                }
+                obras_detailed.append(obra)
+            
+            return obras_detailed
+        except Exception as e:
+            print(f"Error al cargar obras detalladas: {e}")
+            return []

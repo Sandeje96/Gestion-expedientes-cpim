@@ -374,7 +374,7 @@ class EditWorkWindow:
         
     
     def search_obras(self):
-        """Busca obras según el criterio seleccionado"""
+        """Busca obras según el criterio seleccionado (VERSIÓN OPTIMIZADA)"""
         search_text = self.search_entry.get().strip().lower()
         search_option = self.search_option_var.get()
         
@@ -382,25 +382,45 @@ class EditWorkWindow:
             messagebox.showwarning("Búsqueda vacía", "Por favor ingrese un texto para buscar")
             return
         
-        # Obtener todas las obras de nuevo (por si se agregaron nuevas)
-        self.obras = self.data_manager.get_all_works("obra")
+        # Usar cache para búsqueda rápida
+        todas_obras_detalladas = self.data_manager._get_cached_obras()
         
-        # Filtrar según el criterio
+        # Filtrar según el criterio (SIN llamadas adicionales a get_work_by_id)
         filtered_obras = []
         
-        for obra in self.obras:
-            # Obtener obra completa para acceder a todos los campos
-            obra_completa = self.data_manager.get_work_by_id("obra", obra["id"])
-            
-            if obra_completa:
-                if search_option == "Profesional" and obra_completa["nombre_profesional"] and search_text in obra_completa["nombre_profesional"].lower():
-                    filtered_obras.append(obra)
-                elif search_option == "Comitente" and obra_completa["nombre_comitente"] and search_text in obra_completa["nombre_comitente"].lower():
-                    filtered_obras.append(obra)
-                elif search_option == "Partida Inmobiliaria" and obra_completa["nro_partida_inmobiliaria"] and search_text in str(obra_completa["nro_partida_inmobiliaria"]).lower():
-                    filtered_obras.append(obra)
-                elif search_option == "Número GOP" and obra_completa["nro_sistema_gop"] and search_text in str(obra_completa["nro_sistema_gop"]).lower():
-                    filtered_obras.append(obra)
+        for obra_completa in todas_obras_detalladas:
+            if search_option == "Profesional" and obra_completa["nombre_profesional"]:
+                if search_text in obra_completa["nombre_profesional"].lower():
+                    filtered_obras.append({
+                        "id": obra_completa["id"],
+                        "nombre_profesional": obra_completa["nombre_profesional"],
+                        "nombre_comitente": obra_completa["nombre_comitente"],
+                        "fecha": obra_completa["fecha"]
+                    })
+            elif search_option == "Comitente" and obra_completa["nombre_comitente"]:
+                if search_text in obra_completa["nombre_comitente"].lower():
+                    filtered_obras.append({
+                        "id": obra_completa["id"],
+                        "nombre_profesional": obra_completa["nombre_profesional"],
+                        "nombre_comitente": obra_completa["nombre_comitente"],
+                        "fecha": obra_completa["fecha"]
+                    })
+            elif search_option == "Partida Inmobiliaria" and obra_completa["nro_partida_inmobiliaria"]:
+                if search_text in str(obra_completa["nro_partida_inmobiliaria"]).lower():
+                    filtered_obras.append({
+                        "id": obra_completa["id"],
+                        "nombre_profesional": obra_completa["nombre_profesional"],
+                        "nombre_comitente": obra_completa["nombre_comitente"],
+                        "fecha": obra_completa["fecha"]
+                    })
+            elif search_option == "Número GOP" and obra_completa["nro_sistema_gop"]:
+                if search_text in str(obra_completa["nro_sistema_gop"]).lower():
+                    filtered_obras.append({
+                        "id": obra_completa["id"],
+                        "nombre_profesional": obra_completa["nombre_profesional"],
+                        "nombre_comitente": obra_completa["nombre_comitente"],
+                        "fecha": obra_completa["fecha"]
+                    })
         
         # Actualizar la lista de obras mostradas
         if filtered_obras:
