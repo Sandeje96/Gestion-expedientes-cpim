@@ -62,23 +62,24 @@ class CurrencyEntry(ctk.CTkFrame):
                     self.external_var.set("")
                 return
             
-            # Convertir a float (considerando coma como decimal)
+            # LÓGICA CORREGIDA: Manejar números enteros y decimales correctamente
             if ',' in numbers_only:
                 # Si hay coma, separar enteros y decimales
                 parts = numbers_only.split(',')
                 integer_part = parts[0] if parts[0] else "0"
-                decimal_part = parts[1][:2] if len(parts) > 1 else "00"  # Máximo 2 decimales
+                decimal_part = parts[1][:2] if len(parts) > 1 else "00"
                 
-                # Formar el número
+                # Formar el número con decimales
                 self.raw_value = float(f"{integer_part}.{decimal_part}")
             else:
-                # Solo parte entera
+                # CORRECCIÓN: Si no hay coma, es un número entero
+                # No agregar decimales automáticamente
                 self.raw_value = float(numbers_only)
             
             # Actualizar variable externa con el valor numérico
             if self.external_var:
                 self.external_var.set(str(self.raw_value))
-                
+                    
         except Exception as e:
             print(f"Error en formato de moneda: {e}")
     
@@ -93,13 +94,21 @@ class CurrencyEntry(ctk.CTkFrame):
                 self.formatted_var.set("")
                 return
             
-            # Formatear con separadores de miles (puntos) y decimales (coma)
-            formatted = f"${self.raw_value:,.2f}"
+            # CORRECCIÓN: Verificar si el número es entero o tiene decimales
+            if self.raw_value == int(self.raw_value):
+                # Es un número entero, mostrar sin decimales
+                formatted = f"${int(self.raw_value):,}"
+            else:
+                # Tiene decimales, mostrar con 2 decimales
+                formatted = f"${self.raw_value:,.2f}"
+            
             # Cambiar punto por coma para decimales y coma por punto para miles
             formatted = formatted.replace(',', 'TEMP').replace('.', ',').replace('TEMP', '.')
             
             # Temporalmente desconectar el trace para evitar bucle
-            self.formatted_var.trace_remove("write", self.formatted_var.trace_info()[0][1])
+            trace_info = self.formatted_var.trace_info()
+            if trace_info:
+                self.formatted_var.trace_remove("write", trace_info[0][1])
             self.formatted_var.set(formatted)
             self.formatted_var.trace_add("write", self.on_text_changed)
             
@@ -110,26 +119,54 @@ class CurrencyEntry(ctk.CTkFrame):
         """Establece el valor del campo"""
         try:
             if isinstance(value, str):
-                # Limpiar el string y convertir
-                clean_value = re.sub(r'[^\d,.]', '', value)
-                if clean_value:
-                    # Convertir coma a punto para float
-                    clean_value = clean_value.replace(',', '.')
-                    self.raw_value = float(clean_value)
-                else:
+                if not value or value.strip() == "":
                     self.raw_value = 0.0
+                else:
+                    # CORRECCIÓN: Limpiar correctamente el string
+                    # Remover $ y espacios, pero mantener puntos y comas
+                    clean_value = value.replace("$", "").replace(" ", "")
+                    
+                    # Si tiene formato argentino (punto para miles, coma para decimales)
+                    if "." in clean_value and "," in clean_value:
+                        # Formato: 12.000,50 -> convertir a 12000.50
+                        parts = clean_value.split(",")
+                        integer_part = parts[0].replace(".", "")  # Remover puntos de miles
+                        decimal_part = parts[1] if len(parts) > 1 else "00"
+                        clean_value = f"{integer_part}.{decimal_part}"
+                    elif "," in clean_value and "." not in clean_value:
+                        # Solo coma decimal: 12000,50 -> 12000.50
+                        clean_value = clean_value.replace(",", ".")
+                    elif "." in clean_value and "," not in clean_value:
+                        # Solo punto: podría ser miles o decimal
+                        # Si hay más de 3 dígitos después del punto, es separador de miles
+                        parts = clean_value.split(".")
+                        if len(parts) == 2 and len(parts[1]) > 2:
+                            # Es separador de miles: 12.000 -> 12000
+                            clean_value = clean_value.replace(".", "")
+                        # Si tiene 1-2 dígitos después del punto, es decimal
+                    
+                    self.raw_value = float(clean_value) if clean_value else 0.0
             else:
                 self.raw_value = float(value) if value else 0.0
             
             self.format_display()
             
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as e:
+            print(f"Error al establecer valor: {e}")
             self.raw_value = 0.0
             self.formatted_var.set("")
     
     def get(self):
         """Retorna el valor numérico como string"""
-        return str(self.raw_value) if self.raw_value > 0 else ""
+        # CORRECCIÓN: Devolver el valor raw sin formatear
+        if self.raw_value == 0:
+            return ""
+        
+        # Si es un número entero, devolverlo sin decimales
+        if self.raw_value == int(self.raw_value):
+            return str(int(self.raw_value))
+        else:
+            return str(self.raw_value)
     
     def get_float(self):
         """Retorna el valor numérico como float"""
@@ -150,3 +187,4 @@ class CurrencyEntry(ctk.CTkFrame):
     def pack(self, **kwargs):
         """Override pack para el frame"""
         super().pack(**kwargs)
+

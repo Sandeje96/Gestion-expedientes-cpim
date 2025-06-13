@@ -608,7 +608,8 @@ class NewRecordWindow:
                         shutil.copy2(file_path, destination)
                     except Exception as e:
                         messagebox.showerror("Error", f"No se pudo copiar el archivo {file_name}: {str(e)}")
-        
+
+
         # Guardar en el Excel
         row_id = self.data_manager.add_informe_tecnico(data)
         

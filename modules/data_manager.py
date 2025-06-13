@@ -22,25 +22,36 @@ class DataManager:
             if not value or value == "":
                 cell.value = ""
                 return
-                
-            # Si es string, intentar extraer el número
+            
+            # CORRECCIÓN DEFINITIVA: Convertir directamente a float
+            numeric_value = 0.0
+            
             if isinstance(value, str):
-                # Remover símbolos de moneda y espacios
-                clean_value = value.replace("$", "").replace(".", "").replace(",", ".").replace(" ", "")
+                # Solo extraer números y punto/coma decimal
+                import re
+                # Remover todo excepto dígitos, punto y coma
+                clean_value = re.sub(r'[^\d.,]', '', value)
+                
+                # Si tiene coma como decimal (formato argentino), convertir a punto
+                if ',' in clean_value and '.' not in clean_value:
+                    clean_value = clean_value.replace(',', '.')
+                elif '.' in clean_value and ',' in clean_value:
+                    # Formato 12.000,50 - el punto es separador de miles, coma es decimal
+                    parts = clean_value.rsplit(',', 1)  # Dividir por la última coma
+                    integer_part = parts[0].replace('.', '')  # Quitar puntos de miles
+                    decimal_part = parts[1] if len(parts) > 1 else ''
+                    clean_value = f"{integer_part}.{decimal_part}"
+                
                 if clean_value:
-                    try:
-                        numeric_value = float(clean_value)
-                    except ValueError:
-                        # Si no se puede convertir, guardar como string
-                        cell.value = value
-                        return
+                    numeric_value = float(clean_value)
                 else:
                     cell.value = ""
                     return
             else:
+                # Si ya es número, usarlo tal como viene
                 numeric_value = float(value)
             
-            # Establecer el valor numérico
+            # Establecer el valor numérico exacto
             cell.value = numeric_value
             
             # Aplicar formato de moneda argentino
@@ -48,6 +59,7 @@ class DataManager:
             
         except Exception as e:
             print(f"Error al aplicar formato de moneda: {e}")
+            print(f"Valor problemático: {value} (tipo: {type(value)})")
             # En caso de error, guardar el valor original
             cell.value = value
 
