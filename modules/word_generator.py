@@ -354,7 +354,7 @@ class WordGenerator:
         
     
     
-    def generate_informe(self, data, output_path=None):
+    def generate_informe_tecnico(self, data, output_path=None):
         """
         Genera un documento Word para un informe técnico manteniendo el formato.
         

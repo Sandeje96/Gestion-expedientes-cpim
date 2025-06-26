@@ -166,7 +166,7 @@ class WhatsAppSender:
     
     def create_payment_message(self, nombre_profesional, nombre_comitente, tasa_sellado, total_visados):
         """Crea el mensaje de notificación de pagos"""
-        message = f"📋 *CPIM - Notificación de Tasas*\n\n"
+        message = f"📋 *Buen día, desde el Consejo Profesional de Ingeniería nos ponemos en contacto con usted para notificarle el costo de la tasa de sellado y visado de instalaciones (de corresponder).*\n\n"
         message += f"*Profesional:* {nombre_profesional}\n"
         message += f"*Comitente:* {nombre_comitente}\n\n"
         
@@ -191,7 +191,7 @@ class WhatsAppSender:
         if total_amount > 0:
             message += f"\n*Total a pagar:* ${total_amount}\n"
         
-        message += "\n¡Gracias por su atención!"
+        message += "\n¡Sin otro particular lo saludamos atentamente. Gracias por su atención!"
         
         return message
     
